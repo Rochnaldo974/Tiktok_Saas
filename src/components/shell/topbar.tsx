@@ -1,0 +1,146 @@
+'use client';
+
+import { Suspense, useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { Search, Globe, Calendar, Chevron, Alerts } from '@/components/icons';
+import { toast } from '@/components/toaster';
+import { CommandMenu } from '@/components/command-menu';
+import { COUNTRIES, TIMEFRAMES, resolveCountry, resolveTimeframe } from '@/lib/data';
+
+function DropMenu({
+  icon,
+  label,
+  options,
+  value,
+  onPick,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  options: string[];
+  value: string;
+  onPick: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onDoc(e: MouseEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener('click', onDoc);
+    return () => document.removeEventListener('click', onDoc);
+  }, [open]);
+
+  return (
+    <div style={{ position: 'relative' }} ref={ref}>
+      <button
+        className="select-chip"
+        aria-haspopup="true"
+        aria-expanded={open}
+        aria-label={label}
+        onClick={() => setOpen((v) => !v)}
+      >
+        {icon}
+        <span className="chip-label">{value}</span>
+        <Chevron />
+      </button>
+      {open && (
+        <div className="menu" role="menu">
+          {options.map((o) => (
+            <button
+              key={o}
+              role="menuitem"
+              className={o === value ? 'on' : ''}
+              onClick={() => {
+                onPick(o);
+                setOpen(false);
+              }}
+            >
+              {o}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TopbarInner() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const [cmdkOpen, setCmdkOpen] = useState(false);
+
+  const country = resolveCountry(params.get('country') ?? undefined);
+  const timeframe = resolveTimeframe(params.get('tf') ?? undefined);
+
+  function setParam(key: string, value: string) {
+    const next = new URLSearchParams(params.toString());
+    next.set(key, value);
+    router.push(`${pathname}?${next.toString()}`);
+  }
+
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCmdkOpen(true);
+      }
+    }
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, []);
+
+  return (
+    <header className="topbar">
+      <button className="search-trigger" onClick={() => setCmdkOpen(true)} aria-label="Search">
+        <Search />
+        <span>Search videos, creators, sounds, hashtags or hooks...</span>
+        <span className="kbd">⌘K</span>
+      </button>
+      <div className="top-actions">
+        <DropMenu
+          icon={<Globe />}
+          label="Country"
+          options={COUNTRIES.map((c) => c.name)}
+          value={country}
+          onPick={(v) => setParam('country', v)}
+        />
+        <DropMenu
+          icon={<Calendar />}
+          label="Timeframe"
+          options={[...TIMEFRAMES, 'Custom']}
+          value={timeframe}
+          onPick={(v) => {
+            if (v === 'Custom') {
+              toast('Custom ranges are coming soon');
+              return;
+            }
+            setParam('tf', v);
+          }}
+        />
+        <button
+          className="icon-btn"
+          aria-label="Notifications"
+          onClick={() => toast('3 alerts: 2 rising sounds, 1 hook update')}
+        >
+          <Alerts />
+          <span className="dot" />
+        </button>
+        <button className="avatar" aria-label="Profile">ER</button>
+      </div>
+      {cmdkOpen && (
+        <CommandMenu country={country} timeframe={timeframe} onClose={() => setCmdkOpen(false)} />
+      )}
+    </header>
+  );
+}
+
+export function Topbar() {
+  return (
+    <Suspense fallback={<header className="topbar" />}>
+      <TopbarInner />
+    </Suspense>
+  );
+}
