@@ -5,8 +5,7 @@ import { fmt, dur, ago } from '@/lib/data';
 import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
 import { Up, Play, Eye, Heart, Sparkle, Music } from '@/components/icons';
-import { toast } from '@/components/toaster';
-import { saveItem } from '@/lib/library';
+import { openTrendPanel } from '@/components/trend-panel';
 
 export function VideoCard({
   video: v,
@@ -59,23 +58,10 @@ export function VideoCard({
           <span className="chip">Hook : {v.hook.type}</span>
         </div>
         <div className="card-actions">
-          <button
-            className="btn btn-secondary btn-sm"
-            onClick={() => toast(`L'analyse de « ${v.title} » est en préparation`)}
-          >
+          <button className="btn btn-secondary btn-sm" onClick={() => openTrendPanel(v, 'analyse')}>
             Analyser
           </button>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() =>
-              saveItem(
-                'idea',
-                v.id,
-                { title: v.title, niche: v.niche, hook: v.hook.text, sound: v.sound.name, cta: v.cta, growth: v.growth, prodTime: v.prodTime },
-                'Idée ajoutée à votre bibliothèque',
-              )
-            }
-          >
+          <button className="btn btn-primary btn-sm" onClick={() => openTrendPanel(v, 'script')}>
             Créer ma version
           </button>
         </div>

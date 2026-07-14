@@ -117,6 +117,27 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Compte de test : `eliottroche97419+test@gmail.com` (confirmé
       manuellement en base — la confirmation email est active sur le projet)
 
+### 2026-07-15 — Insight → action : panneau Analyse + Script (audit produit)
+- [x] **Panneau latéral** (`src/components/trend-panel.tsx`, monté dans le
+      layout, ouvrable depuis n'importe quelle carte via `openTrendPanel()`)
+      avec 2 onglets :
+      - **Pourquoi ça marche** : analyse IA, scores, difficulté/saturation
+        expliquées, ressorts du format, son + hook à utiliser
+      - **Mon script** : plan de tournage minuté (hook → mise en place →
+        développement → révélation → CTA), **blocs éditables**, copie et
+        sauvegarde en bibliothèque (avec le script dans le payload)
+- [x] Générateur de script déterministe (`src/lib/script.ts`) — adapté au
+      type de contenu (UGC, tutoriel, storytelling...) ; à remplacer par
+      l'API Claude (P3) sans toucher à l'UI
+- [x] Boutons « Analyser » / « Créer ma version » / « Créer mon script »
+      branchés sur le panneau (plus aucun bouton mort dans l'app)
+- [x] **Plan du jour actionnable** (`src/components/daily-plan.tsx`) :
+      chaque ligne se fait en un clic (script, sauvegarde du son, copie du hook)
+- [x] Fix : `seed >> 3` pouvait devenir négatif (décalage signé) et vider
+      un bloc du script → `>>> 3`
+- [x] Vérifié : build + lint OK, panneau testé en navigateur (2 onglets,
+      script minuté correct)
+
 ---
 
 ## 🔜 Immédiat
@@ -139,10 +160,7 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Page **Copilote IA** — fait le 2026-07-15 (réponses de démo locales)
 - [x] Page **Alertes** — fait le 2026-07-15 (badge sidebar « 3 » encore statique)
 - [x] Page **Réglages** — fait le 2026-07-15 (préférences cookie)
-- [ ] **Panneau latéral « Analyser » + générateur de script** : le design existe
-      dans `globals.css` (classes `.panel`, `.panel-tabs`, `.script-block`,
-      `.gen-facts`) — brancher les boutons « Analyser » / « Créer ma version » /
-      « Générer mon script » dessus au lieu d'un simple toast
+- [x] Panneau latéral Analyse + générateur de script — fait le 2026-07-15
 - [ ] Badge Alertes dynamique dans la sidebar (nombre réel d'alertes)
 
 ### P2 — Backend réel
@@ -151,7 +169,6 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Sauvegarde réelle dans `saved_items` + page Bibliothèque — fait le 2026-07-15
 - [ ] Emails d'auth : personnaliser les templates Supabase (FR) et brancher
       un SMTP custom avant la prod (limite stricte du SMTP par défaut)
-- [ ] Boutons « Analyser » : encore des toasts (voir panneau latéral en P1)
 - [ ] **Ingestion de vraies données TikTok** remplaçant le mock `dataset()`
       de `src/lib/data.ts` (l'interface typée `Dataset` est le contrat à garder)
 
@@ -181,3 +198,4 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Supabase : clé publishable côté client, sécurité par policies RLS ; CSP `connect-src` limitée au domaine du projet | Modèle de sécurité standard Supabase, pas de secret dans le code |
 | 2026-07-15 | Le dashboard est centré sur les niches suivies ; le viral global est secondaire (badge « Hors de vos niches », carte « Format transférable ») | Feedback utilisateur : un créateur veut d'abord SA niche ; le hors-niche n'a de valeur que si le format est transposable |
 | 2026-07-15 | Onboarding bloquant à la première visite (choix des niches) | Sans cette donnée, aucune personnalisation n'est honnête ; à terme : déduction via le @handle TikTok |
+| 2026-07-15 | Toute recommandation doit finir en action 1-clic (script, sauvegarde, copie) — zéro bouton mort | Audit produit : la promesse client est « ouvre l'app, repars avec un script », pas « lis un dashboard » |

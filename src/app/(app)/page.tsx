@@ -2,13 +2,14 @@ import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
 import { getPrefsState } from '@/lib/prefs';
 import { Onboarding } from '@/components/onboarding';
+import { DailyPlan } from '@/components/daily-plan';
 import { VideoCard } from '@/components/cards/video-card';
 import { SoundCard } from '@/components/cards/sound-card';
 import { HookCard } from '@/components/cards/hook-card';
 import { CreatorCard } from '@/components/cards/creator-card';
 import { TagCard } from '@/components/cards/tag-card';
 import { Ring } from '@/components/cards/ring';
-import { ArrowRight, Check, Radar, Flame, Music, Quote, Film, Clock, Wand } from '@/components/icons';
+import { ArrowRight, Radar, Flame, Music, Quote, Film, Clock, Wand } from '@/components/icons';
 
 type Search = Promise<{ country?: string; tf?: string }>;
 
@@ -82,30 +83,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
                 </Link>
               </div>
             </div>
-            <aside className="reco-panel">
-              <h4>Votre plan du jour</h4>
-              <div className="reco-item">
-                <Check />
-                <span>
-                  Filmer « {topVideo.title} »
-                  <em>{topVideo.prodTime} · {topVideo.niche}</em>
-                </span>
-              </div>
-              <div className="reco-item">
-                <Check />
-                <span>
-                  Utiliser le son « {topSound.name} »
-                  <em>+{topSound.growth} % · fenêtre de tir</em>
-                </span>
-              </div>
-              <div className="reco-item">
-                <Check />
-                <span>
-                  Ouvrir avec un hook {topHook.type.toLowerCase()}
-                  <em>{topHook.performance} % de rétention sur vos niches</em>
-                </span>
-              </div>
-            </aside>
+            <DailyPlan video={topVideo} sound={topSound} hook={topHook} />
           </div>
         </section>
 

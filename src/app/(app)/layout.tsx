@@ -1,5 +1,6 @@
 import { Sidebar } from '@/components/shell/sidebar';
 import { Topbar } from '@/components/shell/topbar';
+import { TrendPanel } from '@/components/trend-panel';
 import { getPrefs } from '@/lib/prefs';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
@@ -11,6 +12,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Topbar defaultCountry={prefs.country} defaultTimeframe={prefs.tf} />
         {children}
       </div>
+      <TrendPanel />
     </div>
   );
 }

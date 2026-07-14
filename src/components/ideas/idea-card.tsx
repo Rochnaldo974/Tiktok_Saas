@@ -6,7 +6,7 @@ import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
 import { Up, Play, Sparkle, Music, Check, X, Copy, Wand } from '@/components/icons';
 import { toast } from '@/components/toaster';
-import { saveItem } from '@/lib/library';
+import { openTrendPanel } from '@/components/trend-panel';
 
 export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number }) {
   return (
@@ -82,18 +82,8 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
           >
             <Copy /> Copier le hook
           </button>
-          <button
-            className="btn btn-primary btn-sm"
-            onClick={() =>
-              saveItem(
-                'idea',
-                v.id,
-                { title: v.title, niche: v.niche, hook: v.hook.text, sound: v.sound.name, cta: v.cta, growth: v.growth, prodTime: v.prodTime },
-                'Idée ajoutée à votre bibliothèque',
-              )
-            }
-          >
-            <Wand /> Sauvegarder l&apos;idée
+          <button className="btn btn-primary btn-sm" onClick={() => openTrendPanel(v, 'script')}>
+            <Wand /> Créer mon script
           </button>
         </div>
       </div>
