@@ -56,11 +56,15 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 
 ## 🔜 Immédiat
 
-- [ ] `npm install` dans le dossier principal (interrompu — l'app ne démarre
-      pas sans `node_modules`)
+- [x] `npm install` dans le dossier principal — fait le 2026-07-15, build
+      vérifié dans le dossier principal
 - [ ] `git push origin main` (main local est en avance sur origin/main)
 - [ ] Supprimer le worktree devenu inutile :
       `git worktree remove .claude/worktrees/nextjs-rebuild`
+- [ ] Surveiller `npm audit` : 2 vulnérabilités modérées dans le `postcss`
+      embarqué par Next (build-time uniquement, pas d'impact runtime) —
+      **ne pas** lancer `npm audit fix --force` (rétrograderait Next à la v9) ;
+      mettre à jour Next dès qu'un patch sort (`npm update next`)
 
 ---
 
