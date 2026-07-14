@@ -1,9 +1,9 @@
 /* =========================================================
-   Signal — mock data engine
-   Deterministic, seeded per (country, timeframe) so every
-   "refresh" feels like live data without a backend.
-   Pure and isomorphic: safe to run on server and client,
-   both sides derive the exact same dataset for a given key.
+   Signal — moteur de données mock
+   Déterministe, seedé par (pays, période) : chaque "refresh"
+   donne l'impression de données live, sans backend.
+   Pur et isomorphe : sûr côté serveur comme côté client,
+   les deux dérivent exactement le même dataset pour une clé.
    ========================================================= */
 
 export interface Country {
@@ -61,9 +61,28 @@ export interface Hashtag {
   niche: string;
 }
 
+/* Valeurs internes stables (classes CSS, filtres d'URL) ;
+   l'affichage passe par les maps *_LABELS ci-dessous. */
 export type Difficulty = 'Easy' | 'Medium' | 'Hard';
 export type Saturation = 'Low' | 'Medium' | 'High';
 export type TrendStatus = 'New' | 'Growing' | 'Peaking' | 'Saturated';
+
+export const STATUS_LABELS: Record<TrendStatus, string> = {
+  New: 'Nouveau',
+  Growing: 'En croissance',
+  Peaking: 'Au pic',
+  Saturated: 'Saturé',
+};
+export const DIFFICULTY_LABELS: Record<Difficulty, string> = {
+  Easy: 'Facile',
+  Medium: 'Moyen',
+  Hard: 'Difficile',
+};
+export const SATURATION_LABELS: Record<Saturation, string> = {
+  Low: 'Faible',
+  Medium: 'Moyenne',
+  High: 'Élevée',
+};
 
 export interface Video {
   id: string;
@@ -108,7 +127,7 @@ export interface Dataset {
   videos: Video[];
 }
 
-/* ---------- seeded RNG ---------- */
+/* ---------- RNG seedé ---------- */
 type Rnd = () => number;
 
 function mulberry32(a: number): Rnd {
@@ -130,32 +149,32 @@ export function hashStr(s: string): number {
   return h >>> 0;
 }
 
-/* ---------- vocabulary ---------- */
+/* ---------- vocabulaire ---------- */
 export const COUNTRIES: Country[] = [
   { code: 'FR', name: 'France' },
-  { code: 'US', name: 'USA' },
-  { code: 'UK', name: 'UK' },
-  { code: 'ES', name: 'Spain' },
-  { code: 'DE', name: 'Germany' },
-  { code: 'IT', name: 'Italy' },
+  { code: 'US', name: 'États-Unis' },
+  { code: 'UK', name: 'Royaume-Uni' },
+  { code: 'ES', name: 'Espagne' },
+  { code: 'DE', name: 'Allemagne' },
+  { code: 'IT', name: 'Italie' },
   { code: 'CA', name: 'Canada' },
-  { code: 'AU', name: 'Australia' },
+  { code: 'AU', name: 'Australie' },
 ];
 
-export const TIMEFRAMES = ['Today', '24 Hours', '7 Days', '30 Days'] as const;
+export const TIMEFRAMES = ["Aujourd'hui", '24 heures', '7 jours', '30 jours'] as const;
 export type Timeframe = (typeof TIMEFRAMES)[number];
 
 export const NICHES: Niche[] = [
-  { name: 'Finance',     hue: 152, topics: ['a money mistake everyone makes', 'how I saved €10k in 6 months', 'the bank fee nobody checks', 'investing your first €100', 'why your savings lose value', 'the 50/30/20 rule tested', 'side income that actually works', 'reading a payslip properly'] },
-  { name: 'Fitness',     hue: 12,  topics: ['the only 3 exercises you need', 'why your workout stopped working', 'a 10-minute morning routine', 'protein myths debunked', 'training twice a week results', 'fixing your posture at a desk', 'walking vs running for fat loss', 'gym anxiety and how to beat it'] },
-  { name: 'Food',        hue: 35,  topics: ['a 5-ingredient dinner', 'the pasta technique chefs hide', 'meal prep for €20 a week', 'why restaurant rice tastes better', 'one pan, four meals', 'the butter trick for steak', 'bread with no kneading', 'grocery hauls ranked by a chef'] },
-  { name: 'Beauty',      hue: 320, topics: ['the 3-product morning routine', 'why your foundation separates', 'drugstore dupes tested', 'skincare order explained', 'what dermatologists never buy', 'lash mistakes everyone makes', 'SPF myths corrected', 'a 2-minute everyday look'] },
-  { name: 'Real Estate', hue: 210, topics: ['what €200k buys in each city', 'red flags in a rental visit', 'first apartment negotiation', 'staging tricks that add €15k', 'reading a property listing', 'why this flat stayed unsold', 'hidden costs of buying', 'renting vs buying in 2026'] },
-  { name: 'Travel',      hue: 190, topics: ['48 hours in Lisbon done right', 'flight booking timing tested', 'the carry-on packing method', 'hotels vs apartments compared', 'the tourist trap map', 'travelling on €50 a day', 'airport hacks staff use', 'shoulder season secrets'] },
-  { name: 'Gaming',      hue: 265, topics: ['the setting pros never touch', 'building a setup under €800', 'why you plateau in ranked', 'hidden mechanics explained', 'the warm-up routine that works', 'controller vs keyboard settled', 'games that respect your time', 'the aim drill that fixed me'] },
-  { name: 'Lifestyle',   hue: 45,  topics: ['a realistic 5am routine', 'resetting your apartment weekly', 'the 2-minute rule in practice', 'what I stopped buying', 'a slow Sunday system', 'digital declutter walkthrough', 'habits that compound quietly', 'making weekdays feel lighter'] },
-  { name: 'Marketing',   hue: 0,   topics: ['the hook formula behind 1M views', 'ads that feel like content', 'why your CTA gets ignored', 'a landing page in 60 seconds', 'organic vs paid in 2026', 'the psychology of pricing pages', 'UGC briefs that convert', 'email subject lines tested'] },
-  { name: 'Education',   hue: 220, topics: ['the study method top students use', 'learning a language in 20 min a day', 'note-taking systems compared', 'memory tricks that survive exams', 'why re-reading fails', 'AI tools for studying honestly', 'the forgetting curve explained', 'focus without willpower'] },
+  { name: 'Finance',    hue: 152, topics: ["l'erreur d'argent que tout le monde fait", "comment j'ai mis 10 k€ de côté en 6 mois", 'les frais bancaires que personne ne vérifie', 'investir tes 100 premiers euros', 'pourquoi ton épargne perd de la valeur', 'la règle 50/30/20 testée', 'un revenu complémentaire qui marche vraiment', 'lire sa fiche de paie correctement'] },
+  { name: 'Fitness',    hue: 12,  topics: ['les 3 seuls exercices dont tu as besoin', 'pourquoi ton entraînement ne marche plus', 'une routine matinale de 10 minutes', 'les mythes sur les protéines démontés', 'des résultats en 2 séances par semaine', 'corriger sa posture au bureau', 'marche vs course pour perdre du gras', "l'angoisse de la salle et comment la vaincre"] },
+  { name: 'Cuisine',    hue: 35,  topics: ['un dîner en 5 ingrédients', 'la technique des pâtes que les chefs cachent', 'du batch cooking pour 20 € la semaine', 'pourquoi le riz du restaurant est meilleur', 'une poêle, quatre repas', "l'astuce du beurre pour le steak", 'du pain sans pétrissage', 'des courses notées par un chef'] },
+  { name: 'Beauté',     hue: 320, topics: ['la routine du matin en 3 produits', 'pourquoi ton fond de teint se sépare', 'les dupes de pharmacie testés', "l'ordre des soins expliqué", 'ce que les dermatos n’achètent jamais', 'les erreurs de cils que tout le monde fait', 'les mythes sur la SPF corrigés', 'un look du quotidien en 2 minutes'] },
+  { name: 'Immobilier', hue: 210, topics: ['ce que 200 k€ achètent dans chaque ville', "les red flags d'une visite de location", 'négocier son premier appartement', 'le home staging qui ajoute 15 k€', 'lire une annonce immobilière', 'pourquoi cet appart ne se vend pas', "les coûts cachés de l'achat", 'louer ou acheter en 2026'] },
+  { name: 'Voyage',     hue: 190, topics: ['48 heures à Lisbonne bien faites', 'le bon moment pour réserver un vol, testé', 'la méthode du bagage cabine', 'hôtels vs appartements comparés', 'la carte des pièges à touristes', 'voyager avec 50 € par jour', 'les astuces que le personnel des aéroports utilise', 'les secrets de la basse saison'] },
+  { name: 'Gaming',     hue: 265, topics: ['le réglage que les pros ne touchent jamais', 'monter un setup à moins de 800 €', 'pourquoi tu stagnes en ranked', 'les mécaniques cachées expliquées', "la routine d'échauffement qui marche", 'manette vs clavier, le débat tranché', 'les jeux qui respectent ton temps', "l'exercice d'aim qui m'a débloqué"] },
+  { name: 'Lifestyle',  hue: 45,  topics: ['une routine 5h du matin réaliste', 'remettre son appart à zéro chaque semaine', 'la règle des 2 minutes en pratique', "ce que j'ai arrêté d'acheter", 'un système de dimanche lent', 'désencombrement numérique pas à pas', 'les habitudes qui composent en silence', 'rendre les semaines plus légères'] },
+  { name: 'Marketing',  hue: 0,   topics: ['la formule de hook derrière 1M de vues', 'des pubs qui ressemblent à du contenu', 'pourquoi ton CTA est ignoré', 'une landing page en 60 secondes', 'organique vs payant en 2026', 'la psychologie des pages de prix', 'des briefs UGC qui convertissent', "des objets d'email testés"] },
+  { name: 'Éducation',  hue: 220, topics: ['la méthode de travail des meilleurs étudiants', 'apprendre une langue en 20 min par jour', 'les systèmes de prise de notes comparés', 'les astuces mémoire qui survivent aux examens', 'pourquoi relire ne sert à rien', "les outils IA pour réviser honnêtement", "la courbe de l'oubli expliquée", 'se concentrer sans volonté'] },
 ];
 
 const FIRST = ['lea', 'max', 'nora', 'theo', 'emma', 'lucas', 'jade', 'hugo', 'lina', 'noah', 'mila', 'adam', 'zoe', 'liam', 'ines', 'sacha', 'anna', 'elio', 'maya', 'nino'];
@@ -182,98 +201,98 @@ const ARTISTS = [
 ];
 
 const HOOK_TEMPLATES = [
-  { text: 'Nobody talks about this {topic} trick...', type: 'Curiosity' },
-  { text: 'Stop doing this if you care about {topic}.', type: 'Pattern interrupt' },
-  { text: 'I wish someone had told me this about {topic}.', type: 'Confession' },
-  { text: 'This is why your {topic} results are stuck.', type: 'Diagnosis' },
-  { text: 'The {topic} rule I stole from a pro.', type: 'Authority' },
-  { text: 'POV: you finally understand {topic}.', type: 'POV' },
-  { text: 'I tested {topic} for 30 days. Here is what happened.', type: 'Experiment' },
-  { text: 'You are one habit away from fixing {topic}.', type: 'Promise' },
-  { text: 'Everyone gets {topic} wrong. Here is the fix.', type: 'Contrarian' },
-  { text: 'Watch this before you spend money on {topic}.', type: 'Warning' },
-  { text: 'The uncomfortable truth about {topic}.', type: 'Contrarian' },
-  { text: '3 seconds to explain {topic}. Ready?', type: 'Challenge' },
+  { text: 'Personne ne parle de cette astuce sur {topic}...', type: 'Curiosité' },
+  { text: 'Arrête de faire ça si {topic} compte pour toi.', type: 'Rupture' },
+  { text: "J'aurais aimé qu'on me dise ça sur {topic}.", type: 'Confession' },
+  { text: 'Voilà pourquoi tes résultats sur {topic} stagnent.', type: 'Diagnostic' },
+  { text: "La règle sur {topic} que j'ai volée à un pro.", type: 'Autorité' },
+  { text: 'POV : tu comprends enfin {topic}.', type: 'POV' },
+  { text: "J'ai testé {topic} pendant 30 jours. Voilà le résultat.", type: 'Expérience' },
+  { text: "Il te manque une seule habitude pour régler {topic}.", type: 'Promesse' },
+  { text: 'Tout le monde se trompe sur {topic}. Voici le correctif.', type: 'À contre-courant' },
+  { text: "Regarde ça avant de dépenser de l'argent dans {topic}.", type: 'Avertissement' },
+  { text: 'La vérité qui dérange sur {topic}.', type: 'À contre-courant' },
+  { text: '3 secondes pour expliquer {topic}. Prêt ?', type: 'Défi' },
 ];
-const HOOK_TOPICS = ['budgeting', 'your morning routine', 'meal prep', 'skincare', 'renting', 'solo travel', 'ranked games', 'productivity', 'your first ad', 'studying', 'saving money', 'home workouts', 'cooking pasta', 'makeup', 'apartment hunting', 'cheap flights', 'aim training', 'slow living', 'hooks', 'language learning'];
+const HOOK_TOPICS = ['ton budget', 'ta routine du matin', 'le meal prep', 'ta skincare', 'la location', 'le voyage en solo', 'les parties ranked', 'ta productivité', 'ta première pub', 'tes révisions', "l'épargne", 'le sport à la maison', 'la cuisson des pâtes', 'le maquillage', "la recherche d'appart", 'les vols pas chers', "l'entraînement d'aim", 'la slow life', 'les hooks', "l'apprentissage des langues"];
 
-const HASHTAG_BASE = ['fyp', 'pourtoi', 'viral', 'learnontiktok', 'tiktokacademie', 'creatortips', 'moneytok', 'fittok', 'foodtok', 'beautytok', 'immobilier', 'traveltok', 'gamingfr', 'lifestyle', 'marketingdigital', 'studytok', 'budget2026', 'gymtok', 'recetterapide', 'glowup', 'appartparis', 'cityguide', 'setupwars', 'morningroutine', 'growthhacking', 'examseason', 'epargne', 'homeworkout', 'batchcooking', 'skincareroutine', 'visiteappart', 'vanlife', 'esports', 'declutter', 'ugccreator', 'flashcards', 'investir', 'stretching', 'airfryer', 'maquillage', 'negociation', 'roadtrip', 'speedrun', 'slowliving', 'copywriting', 'memorisation', 'cryptofr', 'pilates', 'streetfood', 'cheveux'];
+const HASHTAG_BASE = ['fyp', 'pourtoi', 'viral', 'apprendresurtiktok', 'tiktokacademie', 'astucescreateur', 'moneytok', 'fittok', 'foodtok', 'beautytok', 'immobilier', 'traveltok', 'gamingfr', 'lifestyle', 'marketingdigital', 'studytok', 'budget2026', 'gymtok', 'recetterapide', 'glowup', 'appartparis', 'cityguide', 'setupwars', 'morningroutine', 'growthhacking', 'periodedexam', 'epargne', 'homeworkout', 'batchcooking', 'skincareroutine', 'visiteappart', 'vanlife', 'esports', 'declutter', 'ugccreator', 'flashcards', 'investir', 'stretching', 'airfryer', 'maquillage', 'negociation', 'roadtrip', 'speedrun', 'slowliving', 'copywriting', 'memorisation', 'cryptofr', 'pilates', 'streetfood', 'cheveux'];
 
-const WHY_CHIPS = ['Curiosity Hook', 'Fast Editing', 'Strong CTA', 'Trending Sound', 'Storytelling', 'Emotion', 'Relatable', 'Controversial', 'Educational', 'Authentic'];
-const EMOTIONS = ['Curiosity', 'Surprise', 'Fear', 'Humor', 'Trust', 'Luxury', 'Inspiration', 'Competition', 'Urgency'];
-export const CONTENT_TYPES = ['Storytelling', 'Tutorial', 'UGC', 'Comedy', 'Educational', 'Lifestyle', 'Review', 'Reaction', 'Interview', 'Behind the scenes'];
+const WHY_CHIPS = ['Hook de curiosité', 'Montage rapide', 'CTA fort', 'Son tendance', 'Storytelling', 'Émotion', 'Relatable', 'Clivant', 'Éducatif', 'Authentique'];
+const EMOTIONS = ['Curiosité', 'Surprise', 'Peur', 'Humour', 'Confiance', 'Luxe', 'Inspiration', 'Compétition', 'Urgence'];
+export const CONTENT_TYPES = ['Storytelling', 'Tutoriel', 'UGC', 'Comédie', 'Éducatif', 'Lifestyle', 'Test produit', 'Réaction', 'Interview', 'Coulisses'];
 export const TREND_STATUS = ['New', 'Growing', 'Peaking', 'Saturated'] as const;
-const CTAS = ['Follow for part 2', 'Comment your situation', 'Save this for later', 'Send this to a friend', 'Full guide in bio', 'Try it today and report back', 'Follow for the next test', 'Duet with your version'];
+const CTAS = ['Abonne-toi pour la partie 2', 'Raconte ta situation en commentaire', 'Enregistre pour plus tard', 'Envoie ça à un ami', 'Le guide complet est en bio', "Teste aujourd'hui et reviens me dire", 'Abonne-toi pour le prochain test', 'Fais un duo avec ta version'];
 
 const AI_VIDEO_REASONS = [
-  'The first three seconds create an open question the viewer needs answered.',
-  'A visible on-screen countdown keeps completion rate unusually high.',
-  'Cuts land every 1.5 seconds, which holds attention through the midpoint.',
-  'The creator states a mistake first, then resolves it — a proven retention arc.',
-  'Text overlay contradicts the visual, forcing a second watch.',
-  'A concrete number in the opening line anchors the promise immediately.',
-  'The payoff is withheld until the final second, which drives rewatches.',
-  'Native, unpolished framing reads as authentic and lifts trust.',
-  'A relatable frustration is named in the first line, so comments fill with stories.',
-  'The format invites duets, which multiplies organic reach.',
+  'Les trois premières secondes ouvrent une question que le spectateur doit résoudre.',
+  "Un compte à rebours à l'écran maintient un taux de complétion inhabituellement haut.",
+  "Une coupe toutes les 1,5 secondes retient l'attention jusqu'au milieu de la vidéo.",
+  'Le créateur annonce une erreur puis la corrige — un arc de rétention éprouvé.',
+  'Le texte incrusté contredit le visuel, ce qui force un second visionnage.',
+  "Un chiffre concret dans la première phrase ancre la promesse immédiatement.",
+  'La récompense est retenue jusqu’à la dernière seconde, ce qui génère des revisionnages.',
+  'Un cadrage brut, non produit, paraît authentique et augmente la confiance.',
+  'Une frustration partagée est nommée dès la première ligne : les commentaires se remplissent d’histoires.',
+  'Le format invite au duo, ce qui multiplie la portée organique.',
 ];
 const AI_VIDEO_CONTEXT = [
-  'It is still early enough to reproduce this concept.',
-  'Fewer than 200 creators have adapted this format so far.',
-  'Adoption is accelerating — the next 48 hours matter.',
-  'Similar videos in adjacent niches confirm the pattern.',
-  'Competition is low outside the original niche.',
-  'This structure transfers cleanly to other industries.',
+  'Il est encore assez tôt pour reproduire ce concept.',
+  'Moins de 200 créateurs ont adapté ce format pour le moment.',
+  "L'adoption accélère — les prochaines 48 heures comptent.",
+  'Des vidéos similaires dans des niches voisines confirment le pattern.',
+  'La concurrence est faible en dehors de la niche d’origine.',
+  "Cette structure se transfère proprement à d'autres secteurs.",
 ];
 const AI_CREATOR_REASONS = [
-  'Consistently growing thanks to strong storytelling.',
-  'Posts daily with a repeatable format viewers recognize.',
-  'Wins on hooks — average watch time is well above the niche.',
-  'Turned one viral format into a durable series.',
-  'Underrated: high engagement rate on a small following.',
-  'Adopts rising sounds roughly two days before the crowd.',
-  'Comments show a loyal community, not passive viewers.',
-  'Growth is driven by saves and shares, the strongest signals.',
+  'Croissance régulière portée par un storytelling solide.',
+  'Publie chaque jour avec un format répétable que les spectateurs reconnaissent.',
+  'Gagne sur les hooks — durée de visionnage bien au-dessus de la niche.',
+  'A transformé un format viral en série durable.',
+  'Sous-coté : fort taux d’engagement sur une petite audience.',
+  'Adopte les sons montants environ deux jours avant les autres.',
+  'Les commentaires montrent une communauté fidèle, pas des spectateurs passifs.',
+  'Croissance portée par les enregistrements et partages, les signaux les plus forts.',
 ];
 const AI_SOUND_NOTES = [
-  'Mostly used inside Lifestyle and Finance videos.',
-  'Works best under storytelling voiceovers.',
-  'Adoption doubled in the last 48 hours.',
-  'Still below 5k videos — early window.',
-  'Pairs well with before/after reveals.',
-  'Strong in Beauty, starting to cross into Food.',
-  'Creators using it early are outperforming their averages.',
-  'The drop at second 7 is where most creators place the reveal.',
+  'Surtout utilisé dans des vidéos Lifestyle et Finance.',
+  'Fonctionne mieux sous une voix off storytelling.',
+  'Adoption doublée dans les dernières 48 heures.',
+  'Encore sous les 5 000 vidéos — fenêtre de tir ouverte.',
+  'Se marie bien avec les révélations avant/après.',
+  'Fort en Beauté, commence à percer en Cuisine.',
+  'Les créateurs qui l’utilisent tôt dépassent leurs moyennes.',
+  'Le drop à la 7e seconde est l’endroit où placer la révélation.',
 ];
 const HOOK_EXPLANATIONS = [
-  'Creates an information gap the viewer stays to close.',
-  'Names a mistake first — people watch to check if it is theirs.',
-  'A direct address that stops the scroll mid-swipe.',
-  'Implies insider knowledge, which raises perceived value.',
-  'Front-loads a promise, so the viewer knows the payoff.',
-  'Uses mild controversy to trigger comment replies.',
-  'The confession format builds instant trust.',
-  'Specificity makes the claim feel tested, not sold.',
+  'Crée un manque d’information que le spectateur reste pour combler.',
+  'Nomme d’abord une erreur — on regarde pour vérifier si c’est la sienne.',
+  'Une interpellation directe qui stoppe le scroll en plein geste.',
+  'Suggère un savoir d’initié, ce qui augmente la valeur perçue.',
+  'Annonce la promesse d’entrée : le spectateur connaît la récompense.',
+  'Utilise une controverse légère pour déclencher des réponses en commentaire.',
+  'Le format confession crée une confiance immédiate.',
+  'La précision donne l’impression d’un fait testé, pas vendu.',
 ];
 
 const DIFF_REASONS: Record<Difficulty, string> = {
-  Easy: 'One take, face to camera, no editing skill required.',
-  Medium: 'Needs basic cuts and text overlays, but no set or crew.',
-  Hard: 'Requires multiple locations, b-roll, and tight editing rhythm.',
+  Easy: 'Une prise, face caméra, aucune compétence de montage requise.',
+  Medium: 'Des coupes simples et du texte incrusté, mais ni décor ni équipe.',
+  Hard: 'Plusieurs lieux, du b-roll et un rythme de montage serré.',
 };
 const PROD_REASONS: Record<string, string> = {
-  '15 min': 'Single take plus captions — record it on your next break.',
-  '35 min': 'One filming session and a simple edit in CapCut.',
-  '1 hour': 'A short shot list and one round of editing.',
-  '2 hours': 'Plan the b-roll first; the edit carries this format.',
+  '15 min': 'Une seule prise plus les sous-titres — filme-la à ta prochaine pause.',
+  '35 min': 'Une session de tournage et un montage simple dans CapCut.',
+  '1 heure': 'Une courte liste de plans et une passe de montage.',
+  '2 heures': "Planifie le b-roll d'abord ; le montage porte ce format.",
 };
 const SAT_REASONS: Record<Saturation, string> = {
-  Low: 'Few creators have adapted it — discovery potential is high.',
-  Medium: 'Growing adoption. Differentiate with your niche angle.',
-  High: 'Widely copied. Only a strong personal twist will stand out.',
+  Low: 'Peu de créateurs l’ont adapté — le potentiel de découverte est élevé.',
+  Medium: 'Adoption en hausse. Différencie-toi avec l’angle de ta niche.',
+  High: 'Massivement copié. Seul un vrai twist personnel sortira du lot.',
 };
 
-/* ---------- generators ---------- */
+/* ---------- générateurs ---------- */
 function pick<T>(rnd: Rnd, arr: readonly T[]): T {
   return arr[Math.floor(rnd() * arr.length)];
 }
@@ -376,7 +395,7 @@ function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sou
     const duration = int(rnd, 9, 58);
     const status: TrendStatus = growth > 900 ? 'Peaking' : growth > 400 ? 'Growing' : growth > 150 ? 'New' : 'Saturated';
     const diff: Difficulty = duration < 20 ? 'Easy' : duration < 38 ? 'Medium' : 'Hard';
-    const prod = diff === 'Easy' ? pick(rnd, ['15 min', '35 min']) : diff === 'Medium' ? pick(rnd, ['35 min', '1 hour']) : '2 hours';
+    const prod = diff === 'Easy' ? pick(rnd, ['15 min', '35 min']) : diff === 'Medium' ? pick(rnd, ['35 min', '1 heure']) : '2 heures';
     const sat: Saturation = status === 'Saturated' ? 'High' : status === 'Peaking' ? 'Medium' : 'Low';
     const chips = [...WHY_CHIPS].sort(() => rnd() - 0.5).slice(0, int(rnd, 3, 5));
     const emotions = [...EMOTIONS].sort(() => rnd() - 0.5).slice(0, int(rnd, 2, 3));
@@ -404,7 +423,7 @@ function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sou
       diffReason: DIFF_REASONS[diff],
       prodTime: prod,
       prodReason: PROD_REASONS[prod],
-      budget: pick(rnd, ['Free', 'Free', 'Low', 'Low', 'Medium', 'High']),
+      budget: pick(rnd, ['Gratuit', 'Gratuit', 'Faible', 'Faible', 'Moyen', 'Élevé']),
       saturation: sat,
       satReason: SAT_REASONS[sat],
       chips,
@@ -418,7 +437,7 @@ function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sou
   return out.sort((a, b) => b.growth - a.growth);
 }
 
-/* ---------- dataset (memoized per state) ---------- */
+/* ---------- dataset (mémoïsé par état) ---------- */
 const cache = new Map<string, Dataset>();
 
 export function dataset(countryName: string, timeframe: string): Dataset {
@@ -436,23 +455,26 @@ export function dataset(countryName: string, timeframe: string): Dataset {
   return ds;
 }
 
-/* ---------- search-param helpers ---------- */
+/* ---------- validation des paramètres d'URL ---------- */
 export function resolveCountry(raw: string | undefined): string {
   return COUNTRIES.some((c) => c.name === raw) ? (raw as string) : 'France';
 }
 export function resolveTimeframe(raw: string | undefined): Timeframe {
-  return (TIMEFRAMES as readonly string[]).includes(raw ?? '') ? (raw as Timeframe) : 'Today';
+  return (TIMEFRAMES as readonly string[]).includes(raw ?? '') ? (raw as Timeframe) : "Aujourd'hui";
+}
+export function resolveNiche(raw: string | undefined): string {
+  return NICHES.some((n) => n.name === raw) ? (raw as string) : '';
 }
 
-/* ---------- formatters ---------- */
+/* ---------- formateurs ---------- */
 export function fmt(n: number): string {
-  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace('.0', '') + 'M';
-  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e5 ? 0 : 1).replace('.0', '') + 'K';
+  if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace('.0', '').replace('.', ',') + ' M';
+  if (n >= 1e3) return (n / 1e3).toFixed(n >= 1e5 ? 0 : 1).replace('.0', '').replace('.', ',') + ' k';
   return String(n);
 }
 export function dur(s: number): string {
   return '0:' + String(s).padStart(2, '0');
 }
 export function ago(h: number): string {
-  return h < 24 ? h + 'h ago' : Math.round(h / 24) + 'd ago';
+  return h < 24 ? `il y a ${h} h` : `il y a ${Math.round(h / 24)} j`;
 }

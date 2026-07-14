@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
+import { getPrefs } from '@/lib/prefs';
 import { VideoCard } from '@/components/cards/video-card';
 import { SoundCard } from '@/components/cards/sound-card';
 import { HookCard } from '@/components/cards/hook-card';
@@ -10,12 +11,13 @@ import { ArrowRight, Check, Radar, Flame, Music, Quote, Film, Clock } from '@/co
 
 type Search = Promise<{ country?: string; tf?: string }>;
 
-export const metadata = { title: 'Today' };
+export const metadata = { title: "Aujourd'hui" };
 
 export default async function TodayPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
-  const country = resolveCountry(params.country);
-  const timeframe = resolveTimeframe(params.tf);
+  const prefs = await getPrefs();
+  const country = params.country ? resolveCountry(params.country) : prefs.country;
+  const timeframe = params.tf ? resolveTimeframe(params.tf) : prefs.tf;
   const d = dataset(country, timeframe);
 
   const topVideo = d.videos[0];
@@ -27,79 +29,79 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   const pulse = Math.min(99, avgViral + 4);
   const q = `?country=${encodeURIComponent(country)}&tf=${encodeURIComponent(timeframe)}`;
 
-  const today = new Date().toLocaleDateString('en-GB', {
+  const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 
   return (
     <div className="page">
       <div className="content">
-        {/* daily brief hero */}
+        {/* brief quotidien */}
         <section className="hero reveal" aria-labelledby="brief-title">
           <div className="hero-grid">
             <div>
-              <p className="eyebrow">Live signal — {country} · {timeframe}</p>
+              <p className="eyebrow">Signal live — {country} · {timeframe}</p>
               <h1 className="hero-title" id="brief-title">
-                {topVideo.niche} is moving. {peaking} formats are peaking right now.
+                {topVideo.niche} bouge. {peaking} formats sont au pic en ce moment.
               </h1>
               <div className="hero-brief">
                 <p>
-                  The strongest video of the day — <strong>“{topVideo.title}”</strong> by{' '}
-                  <strong>{topVideo.creator.handle}</strong> — is growing{' '}
-                  <strong>+{topVideo.growth}%</strong> with {fmt(topVideo.views)} views. {topVideo.summary}
+                  La vidéo la plus forte du jour — <strong>« {topVideo.title} »</strong> par{' '}
+                  <strong>{topVideo.creator.handle}</strong> — croît de{' '}
+                  <strong>+{topVideo.growth} %</strong> avec {fmt(topVideo.views)} vues. {topVideo.summary}
                 </p>
                 <p>
-                  On the audio side, <strong>“{topSound.name}”</strong> is up{' '}
-                  <strong>+{topSound.growth}%</strong> and still under {fmt(topSound.videos)} videos —{' '}
-                  {rising} sounds are in their early window across {country}.
+                  Côté audio, <strong>« {topSound.name} »</strong> gagne{' '}
+                  <strong>+{topSound.growth} %</strong> avec moins de {fmt(topSound.videos)} vidéos —{' '}
+                  {rising} sons sont dans leur fenêtre de tir en {country}.
                 </p>
               </div>
               <div className="hero-actions">
-                <Link className="btn btn-primary btn-lg" href={`/ideas${q}`}>
-                  Explore today&apos;s ideas <ArrowRight />
+                <Link className="btn btn-primary btn-lg" href={`/idees${q}`}>
+                  Explorer les idées du jour <ArrowRight />
                 </Link>
-                <Link className="btn btn-secondary btn-lg" href={`/ideas${q}&q=${encodeURIComponent(topVideo.niche)}`}>
-                  Open {topVideo.niche} feed
+                <Link className="btn btn-secondary btn-lg" href={`/idees${q}&q=${encodeURIComponent(topVideo.niche)}`}>
+                  Ouvrir le flux {topVideo.niche}
                 </Link>
               </div>
             </div>
             <aside className="reco-panel">
-              <h4>Today&apos;s plan</h4>
+              <h4>Le plan du jour</h4>
               <div className="reco-item">
                 <Check />
                 <span>
-                  Film “{topVideo.title}”
-                  <em>{topVideo.prodTime} · {topVideo.difficulty} · {topVideo.niche}</em>
+                  Filmer « {topVideo.title} »
+                  <em>{topVideo.prodTime} · {topVideo.niche}</em>
                 </span>
               </div>
               <div className="reco-item">
                 <Check />
                 <span>
-                  Use the sound “{topSound.name}”
-                  <em>+{topSound.growth}% · early window</em>
+                  Utiliser le son « {topSound.name} »
+                  <em>+{topSound.growth} % · fenêtre de tir</em>
                 </span>
               </div>
               <div className="reco-item">
                 <Check />
                 <span>
-                  Open with a {topHook.type.toLowerCase()} hook
-                  <em>{topHook.performance}% retention on similar videos</em>
+                  Ouvrir avec un hook {topHook.type.toLowerCase()}
+                  <em>{topHook.performance} % de rétention sur des vidéos similaires</em>
                 </span>
               </div>
             </aside>
           </div>
         </section>
 
-        {/* viral videos */}
+        {/* vidéos virales */}
         <section aria-labelledby="viral-title">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Detected {timeframe.toLowerCase()}</p>
-              <h2 className="section-title" id="viral-title">Viral right now</h2>
-              <p className="section-sub">Formats with the steepest growth curve in {country}.</p>
+              <p className="eyebrow">Détecté {timeframe === "Aujourd'hui" ? "aujourd'hui" : `sur ${timeframe.toLowerCase()}`}</p>
+              <h2 className="section-title" id="viral-title">Viral en ce moment</h2>
+              <p className="section-sub">Les formats à la croissance la plus forte en {country}.</p>
             </div>
-            <Link className="section-link" href={`/ideas${q}`}>
-              All ideas <ArrowRight />
+            <Link className="section-link" href={`/idees${q}`}>
+              Toutes les idées <ArrowRight />
             </Link>
           </div>
           <div className="video-grid">
@@ -109,13 +111,13 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
           </div>
         </section>
 
-        {/* rising sounds */}
+        {/* sons montants */}
         <section aria-labelledby="sounds-title">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Audio radar</p>
-              <h2 className="section-title" id="sounds-title">Rising sounds</h2>
-              <p className="section-sub">Catch them before they cross 5k videos.</p>
+              <p className="eyebrow">Radar audio</p>
+              <h2 className="section-title" id="sounds-title">Sons montants</h2>
+              <p className="section-sub">À attraper avant qu&apos;ils dépassent 5 000 vidéos.</p>
             </div>
           </div>
           <div className="sound-grid">
@@ -129,9 +131,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
         <section aria-labelledby="hooks-title">
           <div className="section-head">
             <div>
-              <p className="eyebrow">Retention engineering</p>
-              <h2 className="section-title" id="hooks-title">Hooks that hold</h2>
-              <p className="section-sub">Opening lines ranked by measured watch-through.</p>
+              <p className="eyebrow">Ingénierie de rétention</p>
+              <h2 className="section-title" id="hooks-title">Les hooks qui retiennent</h2>
+              <p className="section-sub">Phrases d&apos;ouverture classées par rétention mesurée.</p>
             </div>
           </div>
           <div className="hook-grid">
@@ -146,8 +148,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
           <div className="section-head">
             <div>
               <p className="eyebrow">Distribution</p>
-              <h2 className="section-title" id="tags-title">Hashtag heat</h2>
-              <p className="section-sub">Where the {country} feed is clustering.</p>
+              <h2 className="section-title" id="tags-title">Hashtags chauds</h2>
+              <p className="section-sub">Là où le feed {country} se concentre.</p>
             </div>
           </div>
           <div className="tag-grid">
@@ -157,13 +159,13 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
           </div>
         </section>
 
-        {/* creators */}
+        {/* créateurs */}
         <section aria-labelledby="creators-title">
           <div className="section-head">
             <div>
-              <p className="eyebrow">People to study</p>
-              <h2 className="section-title" id="creators-title">Creators to watch</h2>
-              <p className="section-sub">The fastest-growing accounts in your market this week.</p>
+              <p className="eyebrow">Profils à étudier</p>
+              <h2 className="section-title" id="creators-title">Créateurs à suivre</h2>
+              <p className="section-sub">Les comptes qui grandissent le plus vite sur votre marché cette semaine.</p>
             </div>
           </div>
           <div className="creator-grid">
@@ -174,14 +176,14 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
         </section>
       </div>
 
-      {/* right rail */}
+      {/* rail droit */}
       <aside className="rail">
         <div className="card rail-card reveal">
-          <h4><span className="pulse" /> Trend pulse</h4>
+          <h4><span className="pulse" /> Pouls du marché</h4>
           <div className="score-hero">
             <div>
               <div className="score-num">{pulse}<small>/100</small></div>
-              <div className="score-label">Market activity is <b>high</b> — a good day to publish.</div>
+              <div className="score-label">L&apos;activité du marché est <b>élevée</b> — une bonne journée pour publier.</div>
             </div>
             <Ring value={pulse} accent />
           </div>
@@ -189,29 +191,29 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
         <div className="card rail-card reveal" style={{ animationDelay: '80ms' }}>
           <h4>{country} · {timeframe}</h4>
           <div className="rail-row">
-            <span className="k"><Film /> Videos analyzed</span>
+            <span className="k"><Film /> Vidéos analysées</span>
             <span className="v">{fmt(d.videos.length * 214)}</span>
           </div>
           <div className="rail-row">
-            <span className="k"><Flame /> Peaking formats</span>
-            <span className="v">{peaking}<small>act within 48h</small></span>
+            <span className="k"><Flame /> Formats au pic</span>
+            <span className="v">{peaking}<small>agir sous 48 h</small></span>
           </div>
           <div className="rail-row">
-            <span className="k"><Music /> Sounds in early window</span>
+            <span className="k"><Music /> Sons en fenêtre de tir</span>
             <span className="v">{rising}</span>
           </div>
           <div className="rail-row">
-            <span className="k"><Radar /> Avg viral score</span>
+            <span className="k"><Radar /> Score viral moyen</span>
             <span className="v">{avgViral}</span>
           </div>
           <div className="rail-row">
-            <span className="k"><Clock /> Brief updated</span>
+            <span className="k"><Clock /> Brief mis à jour</span>
             <span className="v">{today}</span>
           </div>
         </div>
         <div className="card rail-quote reveal" style={{ animationDelay: '160ms' }}>
           <p>{topHook.text}</p>
-          <span><Quote style={{ width: 11, height: 11, display: 'inline', verticalAlign: '-1px' }} /> Top hook · {topHook.performance}% retention</span>
+          <span><Quote style={{ width: 11, height: 11, display: 'inline', verticalAlign: '-1px' }} /> Top hook · {topHook.performance} % de rétention</span>
         </div>
       </aside>
     </div>

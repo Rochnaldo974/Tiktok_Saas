@@ -1,7 +1,7 @@
 'use client';
 
 import type { Video } from '@/lib/data';
-import { fmt, dur, ago } from '@/lib/data';
+import { fmt, dur, ago, STATUS_LABELS, DIFFICULTY_LABELS, SATURATION_LABELS } from '@/lib/data';
 import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
 import { Up, Play, Sparkle, Music, Check, X, Copy, Wand } from '@/components/icons';
@@ -13,7 +13,7 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
       <div className="thumb">
         <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
         <div className="thumb-top">
-          <span className="badge green"><Up /> +{v.growth}%</span>
+          <span className="badge green"><Up /> +{v.growth} %</span>
           <span className="badge">{dur(v.duration)}</span>
         </div>
         <div className="play-hint">
@@ -35,19 +35,19 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
                 {v.creator.initials}
               </span>
               <span className="who">{v.creator.handle}</span>
-              <span className="what">· {fmt(v.views)} views · {v.contentType}</span>
+              <span className="what">· {fmt(v.views)} vues · {v.contentType}</span>
             </div>
           </div>
-          <span className={`status-tag status-${v.status}`}>{v.status}</span>
+          <span className={`status-tag status-${v.status}`}>{STATUS_LABELS[v.status]}</span>
         </div>
 
         <div className="fact-row">
-          <div className="fact"><b className="up">{v.viralScore}</b><span>Viral score</span></div>
-          <div className="fact"><b>{v.opportunity}</b><span>Opportunity</span></div>
-          <div className="fact"><b>{v.difficulty}</b><span>Difficulty</span></div>
+          <div className="fact"><b className="up">{v.viralScore}</b><span>Score viral</span></div>
+          <div className="fact"><b>{v.opportunity}</b><span>Opportunité</span></div>
+          <div className="fact"><b>{DIFFICULTY_LABELS[v.difficulty]}</b><span>Difficulté</span></div>
           <div className="fact"><b>{v.prodTime}</b><span>Production</span></div>
           <div className="fact"><b>{v.budget}</b><span>Budget</span></div>
-          <div className="fact"><b>{v.saturation}</b><span>Saturation</span></div>
+          <div className="fact"><b>{SATURATION_LABELS[v.saturation]}</b><span>Saturation</span></div>
         </div>
 
         <div className="ai-note">
@@ -62,11 +62,11 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
         </div>
 
         <div className="copy-list">
-          <h5>Your version</h5>
+          <h5>Votre version</h5>
           <ul>
-            <li className="yes"><Check /> Open with: “{v.hook.text}”</li>
+            <li className="yes"><Check /> Ouvrir avec : « {v.hook.text} »</li>
             <li className="yes"><Check /> {v.prodReason}</li>
-            <li className="yes"><Check /> Close with: “{v.cta}”</li>
+            <li className="yes"><Check /> Conclure avec : « {v.cta} »</li>
             <li className="no"><X /> {v.satReason}</li>
           </ul>
         </div>
@@ -76,16 +76,16 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
             className="btn btn-secondary btn-sm"
             onClick={() => {
               navigator.clipboard?.writeText(v.hook.text);
-              toast('Hook copied to clipboard');
+              toast('Hook copié dans le presse-papiers');
             }}
           >
-            <Copy /> Copy hook
+            <Copy /> Copier le hook
           </button>
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => toast('Script draft added to your ideas')}
+            onClick={() => toast('Brouillon de script ajouté à vos idées')}
           >
-            <Wand /> Generate my script
+            <Wand /> Générer mon script
           </button>
         </div>
       </div>

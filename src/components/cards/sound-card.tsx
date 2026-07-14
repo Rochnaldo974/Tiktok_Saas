@@ -20,17 +20,17 @@ export function SoundCard({ sound: s, delay = 0 }: { sound: Sound; delay?: numbe
         <div className="eq" aria-hidden="true"><i /><i /><i /><i /></div>
       </div>
       <div className="sound-meta">
-        <span className="up">+{s.growth}% growth</span>
-        <span>{fmt(s.videos)} videos</span>
-        {s.rising && <span className="chip hot" style={{ marginLeft: 'auto' }}>Early window</span>}
+        <span className="up">+{s.growth} % de croissance</span>
+        <span>{fmt(s.videos)} vidéos</span>
+        {s.rising && <span className="chip hot" style={{ marginLeft: 'auto' }}>Fenêtre de tir</span>}
       </div>
       <p style={{ color: 'var(--muted)', fontSize: 13 }}>{s.note}</p>
       <div className="card-actions">
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => toast(`“${s.name}” saved to your sound library`)}
+          onClick={() => toast(`« ${s.name} » ajouté à votre bibliothèque de sons`)}
         >
-          <Save /> Save sound
+          <Save /> Sauvegarder le son
         </button>
       </div>
     </article>

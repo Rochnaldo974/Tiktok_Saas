@@ -5,7 +5,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, Globe, Calendar, Chevron, Alerts } from '@/components/icons';
 import { toast } from '@/components/toaster';
 import { CommandMenu } from '@/components/command-menu';
-import { COUNTRIES, TIMEFRAMES, resolveCountry, resolveTimeframe } from '@/lib/data';
+import { COUNTRIES, TIMEFRAMES, resolveCountry, resolveTimeframe, type Timeframe } from '@/lib/data';
 
 function DropMenu({
   icon,
@@ -66,14 +66,22 @@ function DropMenu({
   );
 }
 
-function TopbarInner() {
+function TopbarInner({
+  defaultCountry,
+  defaultTimeframe,
+}: {
+  defaultCountry: string;
+  defaultTimeframe: Timeframe;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const [cmdkOpen, setCmdkOpen] = useState(false);
 
-  const country = resolveCountry(params.get('country') ?? undefined);
-  const timeframe = resolveTimeframe(params.get('tf') ?? undefined);
+  const rawCountry = params.get('country');
+  const rawTf = params.get('tf');
+  const country = rawCountry ? resolveCountry(rawCountry) : defaultCountry;
+  const timeframe = rawTf ? resolveTimeframe(rawTf) : defaultTimeframe;
 
   function setParam(key: string, value: string) {
     const next = new URLSearchParams(params.toString());
@@ -94,27 +102,27 @@ function TopbarInner() {
 
   return (
     <header className="topbar">
-      <button className="search-trigger" onClick={() => setCmdkOpen(true)} aria-label="Search">
+      <button className="search-trigger" onClick={() => setCmdkOpen(true)} aria-label="Rechercher">
         <Search />
-        <span>Search videos, creators, sounds, hashtags or hooks...</span>
+        <span>Rechercher des vidéos, créateurs, sons, hashtags ou hooks...</span>
         <span className="kbd">⌘K</span>
       </button>
       <div className="top-actions">
         <DropMenu
           icon={<Globe />}
-          label="Country"
+          label="Pays"
           options={COUNTRIES.map((c) => c.name)}
           value={country}
           onPick={(v) => setParam('country', v)}
         />
         <DropMenu
           icon={<Calendar />}
-          label="Timeframe"
-          options={[...TIMEFRAMES, 'Custom']}
+          label="Période"
+          options={[...TIMEFRAMES, 'Personnalisé']}
           value={timeframe}
           onPick={(v) => {
-            if (v === 'Custom') {
-              toast('Custom ranges are coming soon');
+            if (v === 'Personnalisé') {
+              toast('Les périodes personnalisées arrivent bientôt');
               return;
             }
             setParam('tf', v);
@@ -123,12 +131,12 @@ function TopbarInner() {
         <button
           className="icon-btn"
           aria-label="Notifications"
-          onClick={() => toast('3 alerts: 2 rising sounds, 1 hook update')}
+          onClick={() => toast('3 alertes : 2 sons montants, 1 hook mis à jour')}
         >
           <Alerts />
           <span className="dot" />
         </button>
-        <button className="avatar" aria-label="Profile">ER</button>
+        <button className="avatar" aria-label="Profil">ER</button>
       </div>
       {cmdkOpen && (
         <CommandMenu country={country} timeframe={timeframe} onClose={() => setCmdkOpen(false)} />
@@ -137,10 +145,10 @@ function TopbarInner() {
   );
 }
 
-export function Topbar() {
+export function Topbar(props: { defaultCountry: string; defaultTimeframe: Timeframe }) {
   return (
     <Suspense fallback={<header className="topbar" />}>
-      <TopbarInner />
+      <TopbarInner {...props} />
     </Suspense>
   );
 }

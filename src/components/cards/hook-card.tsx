@@ -14,19 +14,19 @@ export function HookCard({ hook: h, delay = 0 }: { hook: Hook; delay?: number })
       <p className="hook-text">{h.text}</p>
       <p style={{ color: 'var(--muted)', fontSize: 13 }}>{h.explanation}</p>
       <div className="hook-meta">
-        <span>{h.performance}% retention</span>
+        <span>{h.performance} % de rétention</span>
         <span className="perf-bar"><i style={{ width: `${h.performance}%` }} /></span>
-        <span>~{h.avgDuration}s videos</span>
+        <span>vidéos de ~{h.avgDuration} s</span>
       </div>
       <div className="card-actions">
         <button
           className="btn btn-secondary btn-sm"
           onClick={() => {
             navigator.clipboard?.writeText(h.text);
-            toast('Hook copied to clipboard');
+            toast('Hook copié dans le presse-papiers');
           }}
         >
-          <Copy /> Copy hook
+          <Copy /> Copier le hook
         </button>
       </div>
     </article>

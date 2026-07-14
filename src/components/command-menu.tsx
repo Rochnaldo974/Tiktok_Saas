@@ -43,29 +43,29 @@ export function CommandMenu({
     const d = dataset(country, timeframe);
     const match = (s: string) => s.toLowerCase().includes(query);
     const goIdeas = (niche: string) => {
-      router.push('/ideas?country=' + encodeURIComponent(country) + '&tf=' + encodeURIComponent(timeframe) + '&q=' + encodeURIComponent(niche));
+      router.push('/idees?country=' + encodeURIComponent(country) + '&tf=' + encodeURIComponent(timeframe) + '&q=' + encodeURIComponent(niche));
       onClose();
     };
     return (
       [
-        ['Videos', d.videos.filter((v) => match(v.title) || match(v.niche)).slice(0, 4).map((v): Item => ({
-          icon: <Film />, hue: v.hue, label: v.title, meta: `${fmt(v.views)} views · +${v.growth}%`,
+        ['Vidéos', d.videos.filter((v) => match(v.title) || match(v.niche)).slice(0, 4).map((v): Item => ({
+          icon: <Film />, hue: v.hue, label: v.title, meta: `${fmt(v.views)} vues · +${v.growth} %`,
           go: () => goIdeas(v.niche),
         }))],
-        ['Creators', d.creators.filter((c) => match(c.handle) || match(c.niche)).slice(0, 3).map((c): Item => ({
-          icon: <Users />, hue: c.hue, label: c.handle, meta: `${fmt(c.followers)} followers · ${c.niche}`,
-          go: () => { toast(`Creator report for ${c.handle} is being prepared`); onClose(); },
+        ['Créateurs', d.creators.filter((c) => match(c.handle) || match(c.niche)).slice(0, 3).map((c): Item => ({
+          icon: <Users />, hue: c.hue, label: c.handle, meta: `${fmt(c.followers)} abonnés · ${c.niche}`,
+          go: () => { toast(`Le rapport créateur de ${c.handle} est en préparation`); onClose(); },
         }))],
-        ['Sounds', d.sounds.filter((s) => match(s.name) || match(s.artist)).slice(0, 3).map((s): Item => ({
-          icon: <Music />, hue: s.hue, label: s.name, meta: `+${s.growth}% · ${fmt(s.videos)} videos`,
-          go: () => { toast(`“${s.name}” saved to your sound library`); onClose(); },
+        ['Sons', d.sounds.filter((s) => match(s.name) || match(s.artist)).slice(0, 3).map((s): Item => ({
+          icon: <Music />, hue: s.hue, label: s.name, meta: `+${s.growth} % · ${fmt(s.videos)} vidéos`,
+          go: () => { toast(`« ${s.name} » ajouté à votre bibliothèque de sons`); onClose(); },
         }))],
         ['Hooks', d.hooks.filter((h) => match(h.text)).slice(0, 3).map((h): Item => ({
-          icon: <Quote />, hue: 0, label: h.text, meta: `${h.performance}% retention`,
-          go: () => { navigator.clipboard?.writeText(h.text); toast('Hook copied to clipboard'); onClose(); },
+          icon: <Quote />, hue: 0, label: h.text, meta: `${h.performance} % de rétention`,
+          go: () => { navigator.clipboard?.writeText(h.text); toast('Hook copié dans le presse-papiers'); onClose(); },
         }))],
         ['Hashtags', d.hashtags.filter((t) => match(t.tag)).slice(0, 3).map((t): Item => ({
-          icon: <Hash />, hue: 210, label: t.tag, meta: `${fmt(t.videos)} videos`,
+          icon: <Hash />, hue: 210, label: t.tag, meta: `${fmt(t.videos)} vidéos`,
           go: () => goIdeas(t.niche),
         }))],
       ] as [string, Item[]][]
@@ -73,7 +73,7 @@ export function CommandMenu({
   }, [q, country, timeframe, router, onClose]);
 
   return (
-    <div className="cmdk" role="dialog" aria-modal="true" aria-label="Global search"
+    <div className="cmdk" role="dialog" aria-modal="true" aria-label="Recherche globale"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
       <div className="cmdk-box">
         <div className="cmdk-input">
@@ -82,21 +82,21 @@ export function CommandMenu({
             ref={inputRef}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search videos, creators, sounds, hashtags or hooks..."
-            aria-label="Global search"
+            placeholder="Rechercher des vidéos, créateurs, sons, hashtags ou hooks..."
+            aria-label="Recherche globale"
           />
-          <span className="kbd">esc</span>
+          <span className="kbd">échap</span>
         </div>
         <div className="cmdk-results">
           {!q.trim() ? (
             <div className="cmdk-empty">
-              <b>Search everything on TikTok {country}</b>
-              Try a niche — “finance”, “restaurant” — or a creator, sound or hook.
+              <b>Cherchez tout TikTok {country}</b>
+              Essayez une niche — « finance », « restaurant » — ou un créateur, un son, un hook.
             </div>
           ) : !groups.length ? (
             <div className="cmdk-empty">
-              <b>No strong signals for “{q}”</b>
-              Try another country or timeframe — or search a broader niche.
+              <b>Aucun signal fort pour « {q} »</b>
+              Essayez un autre pays ou une autre période — ou une niche plus large.
             </div>
           ) : (
             groups.map(([name, items]) => (

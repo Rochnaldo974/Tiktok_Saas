@@ -52,6 +52,33 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Git : branche `worktree-nextjs-rebuild` poussée sur origin, mergée en
       fast-forward dans `main` **local**
 
+### 2026-07-15 — Français + pages complètes + Supabase
+- [x] **Interface 100 % en français** : chrome UI, pages, contenus mock
+      (`src/lib/data.ts` traduit), `lang="fr"`, guillemets « », formats FR ;
+      valeurs internes (statuts, difficulté) restent en anglais avec maps
+      d'affichage `STATUS_LABELS` / `DIFFICULTY_LABELS` / `SATURATION_LABELS`
+- [x] Routes renommées en français : `/idees`, `/copilote`, `/alertes`, `/reglages`
+- [x] Page **Copilote IA** (`src/app/(app)/copilote/`) : chat avec réponses de
+      démo dérivées localement du dataset (plan du jour, analyse de niche,
+      sons, hooks, créateurs) — `answer()` dans `src/components/copilot/chat.tsx`
+      est le point à remplacer par l'API Claude
+- [x] Page **Alertes** (`src/app/(app)/alertes/`) : flux généré depuis les
+      niches suivies + règles d'alerte (interrupteurs)
+- [x] Page **Réglages** (`src/app/(app)/reglages/`) : pays/période par défaut
+      et niches suivies, persistés dans le cookie `sig-prefs`
+      (`src/lib/prefs*.ts`) et lus côté serveur — vérifié
+- [x] **Projet Supabase créé** : « Signal », ref `znxmwdrbmwwshsmtcmtl`,
+      région eu-west-3 (Paris), 10 $/mois confirmés par l'utilisateur
+- [x] Schéma initial appliqué (migration `initial_schema`) : `profiles` +
+      `saved_items`, RLS par utilisateur, trigger de création de profil
+- [x] Client câblé : `src/lib/supabase.ts` (clé publishable), `.env.local`
+      (non versionné) + `.env.example`, CSP `connect-src` ouverte au seul
+      domaine Supabase
+- [x] Correctif : bloc CSS « panneau latéral & formulaires » (`.field`,
+      `.panel`, `.script-block`) restauré dans `globals.css`
+- [x] Vérifié : build + lint OK, 5 routes en 200, pages testées en navigateur,
+      persistance des préférences validée (cookie → rendu serveur)
+
 ---
 
 ## 🔜 Immédiat
@@ -71,29 +98,32 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 ## 📋 Backlog priorisé
 
 ### P1 — Compléter le produit visible
-- [ ] Page **AI Copilot** (stub sidebar → vraie page) : chat/brief génératif
-- [ ] Page **Alerts** (stub sidebar) : alertes sons/hooks/niches suivis,
-      badge "3" actuellement factice
-- [ ] Page **Settings** (stub sidebar) : pays par défaut, niches suivies, compte
-- [ ] **Panneau latéral "Analyze" + générateur de script** : le design existe
-      déjà dans `globals.css` (classes `.panel`, `.panel-tabs`, `.script-block`,
-      `.gen-facts`) — brancher les boutons "Analyze" / "Create my version" /
-      "Generate my script" dessus au lieu d'un simple toast
+- [x] Page **Copilote IA** — fait le 2026-07-15 (réponses de démo locales)
+- [x] Page **Alertes** — fait le 2026-07-15 (badge sidebar « 3 » encore statique)
+- [x] Page **Réglages** — fait le 2026-07-15 (préférences cookie)
+- [ ] **Panneau latéral « Analyser » + générateur de script** : le design existe
+      dans `globals.css` (classes `.panel`, `.panel-tabs`, `.script-block`,
+      `.gen-facts`) — brancher les boutons « Analyser » / « Créer ma version » /
+      « Générer mon script » dessus au lieu d'un simple toast
+- [ ] Badge Alertes dynamique dans la sidebar (nombre réel d'alertes)
 
 ### P2 — Backend réel
-- [ ] **Auth + persistance** (Supabase recommandé — MCP déjà connecté) :
-      comptes, sauvegarde sons/hooks/idées, derrière l'interface `Dataset`
-      existante pour ne pas toucher aux pages
+- [x] Projet Supabase + schéma (`profiles`, `saved_items`, RLS) — fait le 2026-07-15
+- [ ] **Authentification Supabase** (inscription/connexion, page Réglages >
+      Compte) puis migration des préférences cookie vers `profiles`
+- [ ] **Sauvegarde réelle** des sons/hooks/idées dans `saved_items`
+      (les boutons « Sauvegarder » actuels ne font qu'un toast)
 - [ ] **Ingestion de vraies données TikTok** remplaçant le mock `dataset()`
       de `src/lib/data.ts` (l'interface typée `Dataset` est le contrat à garder)
 
 ### P3 — Industrialisation
 - [ ] Génération IA réelle des scripts/analyses (API Claude — modèle
-      `claude-sonnet-5` par défaut)
+      `claude-sonnet-5` par défaut) : remplacer `answer()` dans
+      `src/components/copilot/chat.tsx` par une route serveur
 - [ ] Tests E2E (Playwright) + CI GitHub Actions (build, lint, tests)
-- [ ] Déploiement (Vercel) + domaine
+- [ ] Déploiement (Vercel) + domaine — penser aux variables d'env Supabase
 - [ ] Billing/abonnements (Stripe)
-- [ ] i18n FR/EN
+- [ ] i18n : le français est la langue de base ; ajouter l'anglais ensuite
 
 ---
 
@@ -106,3 +136,7 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Design system Signal conservé tel quel (pas de thème générique) | Identité distinctive déjà validée ; portée dans `globals.css` |
 | 2026-07-15 | Moteur mock isomorphe et seedé, typé (`Dataset`) | Serveur et client dérivent les mêmes données ; contrat stable pour brancher une vraie API plus tard |
 | 2026-07-15 | Zéro dépendance runtime hors React/Next (icônes SVG inline, dégradés générés) | Surface d'attaque minimale, CSP self-only possible, perf |
+| 2026-07-15 | Français langue de base ; valeurs internes (statuts, enums) en anglais + maps de labels | Classes CSS et paramètres d'URL stables, affichage traduit |
+| 2026-07-15 | Routes en français (`/idees`, `/copilote`, `/alertes`, `/reglages`) | Cohérence produit pour une audience francophone |
+| 2026-07-15 | Préférences via cookie `sig-prefs` (non httpOnly, validées en liste blanche à la lecture) | Lisible serveur ET client sans auth ; migrera vers `profiles` avec Supabase Auth |
+| 2026-07-15 | Supabase : clé publishable côté client, sécurité par policies RLS ; CSP `connect-src` limitée au domaine du projet | Modèle de sécurité standard Supabase, pas de secret dans le code |

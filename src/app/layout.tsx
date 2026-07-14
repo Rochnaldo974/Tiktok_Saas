@@ -20,11 +20,11 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Signal — TikTok intelligence',
+    default: 'Signal — Intelligence TikTok',
     template: '%s · Signal',
   },
   description:
-    'Signal scans TikTok trends by country and surfaces the videos, sounds, hooks and creators worth acting on today.',
+    "Signal scanne les tendances TikTok par pays et fait remonter les vidéos, sons, hooks et créateurs sur lesquels agir aujourd'hui.",
   applicationName: 'Signal',
   robots: { index: false, follow: false },
 };
@@ -39,7 +39,7 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${bricolage.variable} ${inter.variable} ${jetbrains.variable}`}>
+    <html lang="fr" className={`${bricolage.variable} ${inter.variable} ${jetbrains.variable}`}>
       <body>
         {children}
         <Toaster />

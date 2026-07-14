@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search } from '@/components/icons';
-import { NICHES, TREND_STATUS } from '@/lib/data';
+import { NICHES, TREND_STATUS, STATUS_LABELS } from '@/lib/data';
 
-const SUGGESTIONS = ['Finance', 'Food', 'Beauty', 'Gaming', 'Marketing'];
+const SUGGESTIONS = ['Finance', 'Cuisine', 'Beauté', 'Gaming', 'Marketing'];
 
 export function IdeasFilters() {
   const router = useRouter();
@@ -17,7 +17,7 @@ export function IdeasFilters() {
   const [text, setText] = useState(q);
   const [prevQ, setPrevQ] = useState(q);
 
-  // Re-sync the input when the URL changes from outside (back button, ⌘K).
+  // Resynchronise le champ quand l'URL change de l'extérieur (retour, ⌘K).
   if (q !== prevQ) {
     setPrevQ(q);
     setText(q);
@@ -32,7 +32,7 @@ export function IdeasFilters() {
     router.push(`${pathname}?${next.toString()}`);
   }
 
-  // Debounced text search so typing doesn't spam navigation.
+  // Recherche avec debounce pour ne pas spammer la navigation.
   useEffect(() => {
     if (text === q) return;
     const t = setTimeout(() => apply({ q: text }), 350);
@@ -47,15 +47,15 @@ export function IdeasFilters() {
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Search a niche, topic, sound or hook — “finance”, “meal prep”, “pov”..."
-          aria-label="Search ideas"
+          placeholder="Cherchez une niche, un sujet, un son ou un hook — « finance », « meal prep », « pov »..."
+          aria-label="Rechercher des idées"
         />
         {text && (
-          <button className="kbd" onClick={() => setText('')} aria-label="Clear search">clear</button>
+          <button className="kbd" onClick={() => setText('')} aria-label="Effacer la recherche">effacer</button>
         )}
       </div>
       <div className="suggest-row">
-        <span className="lbl">Try</span>
+        <span className="lbl">Essayez</span>
         {SUGGESTIONS.map((s) => (
           <button
             key={s}
@@ -68,7 +68,7 @@ export function IdeasFilters() {
       </div>
       <div className="filter-bar" style={{ marginTop: 22 }}>
         <button className={`pill${!niche ? ' on' : ''}`} onClick={() => apply({ niche: '' })}>
-          All niches
+          Toutes les niches
         </button>
         {NICHES.map((n) => (
           <button
@@ -86,7 +86,7 @@ export function IdeasFilters() {
             className={`pill${status === s ? ' on' : ''}`}
             onClick={() => apply({ status: status === s ? '' : s })}
           >
-            {s}
+            {STATUS_LABELS[s]}
           </button>
         ))}
       </div>

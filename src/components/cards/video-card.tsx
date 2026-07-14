@@ -13,7 +13,7 @@ export function VideoCard({ video: v, delay = 0 }: { video: Video; delay?: numbe
       <div className="thumb">
         <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
         <div className="thumb-top">
-          <span className="badge green"><Up /> +{v.growth}%</span>
+          <span className="badge green"><Up /> +{v.growth} %</span>
           <span className="badge">{dur(v.duration)}</span>
         </div>
         <div className="play-hint">
@@ -32,7 +32,7 @@ export function VideoCard({ video: v, delay = 0 }: { video: Video; delay?: numbe
             {v.creator.initials}
           </span>
           <span className="who">{v.creator.handle}</span>
-          <span className="what">· {fmt(v.creator.followers)} followers</span>
+          <span className="what">· {fmt(v.creator.followers)} abonnés</span>
         </div>
         <div className="video-stats">
           <span><Eye />{fmt(v.views)}</span>
@@ -45,20 +45,20 @@ export function VideoCard({ video: v, delay = 0 }: { video: Video; delay?: numbe
         </div>
         <div className="chip-row">
           <span className="chip"><Music /> {v.sound.name}</span>
-          <span className="chip">Hook: {v.hook.type}</span>
+          <span className="chip">Hook : {v.hook.type}</span>
         </div>
         <div className="card-actions">
           <button
             className="btn btn-secondary btn-sm"
-            onClick={() => toast(`Analysis for “${v.title}” is being prepared`)}
+            onClick={() => toast(`L'analyse de « ${v.title} » est en préparation`)}
           >
-            Analyze
+            Analyser
           </button>
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => toast('Script draft added to your ideas')}
+            onClick={() => toast('Brouillon de script ajouté à vos idées')}
           >
-            Create my version
+            Créer ma version
           </button>
         </div>
       </div>

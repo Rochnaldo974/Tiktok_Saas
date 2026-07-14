@@ -5,15 +5,20 @@ import type { NextConfig } from "next";
      'unsafe-inline' covers Next's hydration bootstrap scripts.
    - style-src 'unsafe-inline' is required by generated gradient
      thumbnails (inline style attributes) — no external styles load.
-   - No external hosts are allowed anywhere: the app is fully
-     self-contained (no CDN, no remote images, no third-party JS). */
+   - connect-src is opened only to the Supabase project (auth +
+     data); every other external host stays blocked. */
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const connectSrc = ["'self'", supabaseUrl, supabaseUrl?.replace("https://", "wss://")]
+  .filter(Boolean)
+  .join(" ");
+
 const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
   "font-src 'self'",
-  "connect-src 'self'",
+  `connect-src ${connectSrc}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

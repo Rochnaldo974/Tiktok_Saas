@@ -15,14 +15,14 @@ export function CreatorCard({ creator: c, delay = 0 }: { creator: Creator; delay
           <div className="creator-handle">{c.handle}</div>
           <div className="chip-row" style={{ marginTop: 4 }}>
             <span className="chip">{c.niche}</span>
-            <span className="chip good">+{c.growth}% this week</span>
+            <span className="chip good">+{c.growth} % cette semaine</span>
           </div>
         </div>
       </div>
       <div className="creator-stats">
-        <div className="cstat"><b>{fmt(c.followers)}</b><span>Followers</span></div>
-        <div className="cstat"><b>{fmt(c.avgViews)}</b><span>Avg views</span></div>
-        <div className="cstat"><b className="up">{c.engagement}%</b><span>Engage</span></div>
+        <div className="cstat"><b>{fmt(c.followers)}</b><span>Abonnés</span></div>
+        <div className="cstat"><b>{fmt(c.avgViews)}</b><span>Vues moy.</span></div>
+        <div className="cstat"><b className="up">{c.engagement} %</b><span>Engagement</span></div>
       </div>
       <div className="ai-note">
         <Sparkle />
@@ -31,9 +31,9 @@ export function CreatorCard({ creator: c, delay = 0 }: { creator: Creator; delay
       <div className="card-actions">
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => toast(`Creator report for ${c.handle} is being prepared`)}
+          onClick={() => toast(`Le rapport créateur de ${c.handle} est en préparation`)}
         >
-          Full report
+          Rapport complet
         </button>
       </div>
     </article>

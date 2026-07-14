@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { dataset, resolveCountry, resolveTimeframe } from '@/lib/data';
+import { getPrefs } from '@/lib/prefs';
 import { IdeasFilters } from '@/components/ideas/filters';
 import { IdeaCard } from '@/components/ideas/idea-card';
 import { Scan } from '@/components/icons';
@@ -13,12 +14,13 @@ type Search = Promise<{
   status?: string;
 }>;
 
-export const metadata = { title: 'Ideas' };
+export const metadata = { title: 'Idées' };
 
 export default async function IdeasPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
-  const country = resolveCountry(params.country);
-  const timeframe = resolveTimeframe(params.tf);
+  const prefs = await getPrefs();
+  const country = params.country ? resolveCountry(params.country) : prefs.country;
+  const timeframe = params.tf ? resolveTimeframe(params.tf) : prefs.tf;
   const q = (params.q ?? '').trim().toLowerCase();
   const niche = params.niche ?? '';
   const status = params.status ?? '';
@@ -42,11 +44,11 @@ export default async function IdeasPage({ searchParams }: { searchParams: Search
     <div className="page" style={{ gridTemplateColumns: '1fr' }}>
       <div className="content" style={{ gap: 36 }}>
         <header>
-          <p className="eyebrow">Idea engine — {country} · {timeframe}</p>
-          <h1 className="page-title" style={{ marginTop: 12 }}>What should you film today?</h1>
+          <p className="eyebrow">Moteur à idées — {country} · {timeframe}</p>
+          <h1 className="page-title" style={{ marginTop: 12 }}>Que filmer aujourd&apos;hui ?</h1>
           <p className="page-sub" style={{ marginTop: 14 }}>
-            Every idea below is backed by a video currently growing in {country}, with the
-            hook, sound and production plan to make your version.
+            Chaque idée ci-dessous s&apos;appuie sur une vidéo qui monte en ce moment en {country},
+            avec le hook, le son et le plan de production pour faire votre version.
           </p>
           <Suspense fallback={null}>
             <IdeasFilters />
@@ -62,9 +64,9 @@ export default async function IdeasPage({ searchParams }: { searchParams: Search
         ) : (
           <div className="empty">
             <Scan />
-            <h4>No strong signals for this filter</h4>
-            <p>Try another niche or timeframe — or clear the search to see everything moving in {country}.</p>
-            <Link className="btn btn-secondary" href={`/ideas${baseQuery}`}>Clear filters</Link>
+            <h4>Aucun signal fort pour ce filtre</h4>
+            <p>Essayez une autre niche ou une autre période — ou effacez la recherche pour voir tout ce qui bouge en {country}.</p>
+            <Link className="btn btn-secondary" href={`/idees${baseQuery}`}>Effacer les filtres</Link>
           </div>
         )}
       </div>
