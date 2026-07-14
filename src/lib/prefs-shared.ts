@@ -1,10 +1,11 @@
 import { NICHES, resolveCountry, resolveTimeframe, type Timeframe } from '@/lib/data';
 
-/* Préférences utilisateur (cookie `sig-prefs`, non sensible) :
-   pays/période par défaut quand l'URL ne précise rien, et niches
-   suivies pour la page Alertes. Toujours validées à la lecture.
-   Partagé serveur/client — la lecture des cookies vit dans
-   prefs.ts (serveur) et prefs-client.ts (navigateur). */
+/* Préférences utilisateur : pays/période par défaut et niches suivies.
+   Deux sources, toujours validées à la lecture :
+   - cookie `sig-prefs` (visiteur non connecté, posé à l'onboarding) ;
+   - table `profiles` Supabase (utilisateur connecté).
+   Partagé serveur/client — la lecture vit dans prefs.ts (serveur)
+   et prefs-client.ts (navigateur). */
 
 export const PREFS_COOKIE = 'sig-prefs';
 
@@ -16,6 +17,21 @@ export interface Prefs {
 
 export const DEFAULT_NICHES = ['Finance', 'Cuisine', 'Marketing'];
 
+export function normalizePrefs(data: {
+  country?: unknown;
+  tf?: unknown;
+  niches?: unknown;
+}): Prefs {
+  const niches = Array.isArray(data.niches)
+    ? data.niches.filter((n): n is string => typeof n === 'string' && NICHES.some((x) => x.name === n))
+    : [];
+  return {
+    country: resolveCountry(typeof data.country === 'string' ? data.country : undefined),
+    tf: resolveTimeframe(typeof data.tf === 'string' ? data.tf : undefined),
+    niches: niches.length ? niches : DEFAULT_NICHES,
+  };
+}
+
 export function parsePrefs(raw: string | undefined): Prefs {
   let data: Partial<Prefs> = {};
   if (raw) {
@@ -25,12 +41,5 @@ export function parsePrefs(raw: string | undefined): Prefs {
       data = {};
     }
   }
-  const niches = Array.isArray(data.niches)
-    ? data.niches.filter((n) => NICHES.some((x) => x.name === n)).slice(0, NICHES.length)
-    : [];
-  return {
-    country: resolveCountry(typeof data.country === 'string' ? data.country : undefined),
-    tf: resolveTimeframe(typeof data.tf === 'string' ? data.tf : undefined),
-    niches: niches.length ? niches : DEFAULT_NICHES,
-  };
+  return normalizePrefs(data);
 }

@@ -1,10 +1,10 @@
-import { getPrefs } from '@/lib/prefs';
+import { getPrefsState } from '@/lib/prefs';
 import { SettingsForm } from '@/components/settings/form';
 
 export const metadata = { title: 'Réglages' };
 
 export default async function SettingsPage() {
-  const prefs = await getPrefs();
+  const { prefs, user } = await getPrefsState();
 
   return (
     <div className="page" style={{ gridTemplateColumns: '1fr' }}>
@@ -17,7 +17,7 @@ export default async function SettingsPage() {
             par défaut, et les niches qui alimentent vos alertes.
           </p>
         </header>
-        <SettingsForm initial={prefs} />
+        <SettingsForm initial={prefs} userEmail={user?.email ?? null} />
       </div>
     </div>
   );

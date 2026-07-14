@@ -96,6 +96,27 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Vérifié : build + lint OK, parcours onboarding → dashboard testé en
       navigateur, personnalisation validée par cookie côté serveur
 
+### 2026-07-15 — Authentification Supabase + Bibliothèque
+- [x] **Auth SSR** (`@supabase/ssr`) : clients navigateur/serveur
+      (`src/lib/supabase/`), rafraîchissement de session dans `src/proxy.ts`
+      (Next 16 : `middleware` est déprécié au profit de `proxy`)
+- [x] Page **/connexion** : inscription + connexion email/mot de passe,
+      erreurs traduites ; à l'inscription, les préférences de l'onboarding
+      (cookie) sont copiées dans le profil
+- [x] **Préférences hiérarchisées** : connecté → table `profiles` (source de
+      vérité) ; sinon cookie `sig-prefs` ; Réglages synchronise les deux
+- [x] Réglages > Compte : email connecté, déconnexion, lien connexion
+- [x] **Sauvegarde réelle** : sons / hooks / idées écrits dans `saved_items`
+      (upsert, RLS par utilisateur) via `src/lib/library.ts` ; toast
+      « Connectez-vous » si pas de session
+- [x] Page **/bibliotheque** (+ entrée sidebar) : liste serveur des éléments
+      sauvegardés, copie presse-papiers, suppression
+- [x] Testé de bout en bout en navigateur : inscription → confirmation →
+      connexion → niches du profil sur le dashboard → sauvegarde d'une idée
+      → visible en base (SQL) et dans la Bibliothèque
+- [x] Compte de test : `eliottroche97419+test@gmail.com` (confirmé
+      manuellement en base — la confirmation email est active sur le projet)
+
 ---
 
 ## 🔜 Immédiat
@@ -126,10 +147,11 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 
 ### P2 — Backend réel
 - [x] Projet Supabase + schéma (`profiles`, `saved_items`, RLS) — fait le 2026-07-15
-- [ ] **Authentification Supabase** (inscription/connexion, page Réglages >
-      Compte) puis migration des préférences cookie vers `profiles`
-- [ ] **Sauvegarde réelle** des sons/hooks/idées dans `saved_items`
-      (les boutons « Sauvegarder » actuels ne font qu'un toast)
+- [x] Authentification Supabase + préférences dans `profiles` — fait le 2026-07-15
+- [x] Sauvegarde réelle dans `saved_items` + page Bibliothèque — fait le 2026-07-15
+- [ ] Emails d'auth : personnaliser les templates Supabase (FR) et brancher
+      un SMTP custom avant la prod (limite stricte du SMTP par défaut)
+- [ ] Boutons « Analyser » : encore des toasts (voir panneau latéral en P1)
 - [ ] **Ingestion de vraies données TikTok** remplaçant le mock `dataset()`
       de `src/lib/data.ts` (l'interface typée `Dataset` est le contrat à garder)
 

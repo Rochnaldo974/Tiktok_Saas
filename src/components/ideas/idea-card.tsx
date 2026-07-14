@@ -6,6 +6,7 @@ import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
 import { Up, Play, Sparkle, Music, Check, X, Copy, Wand } from '@/components/icons';
 import { toast } from '@/components/toaster';
+import { saveItem } from '@/lib/library';
 
 export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number }) {
   return (
@@ -83,9 +84,16 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
           </button>
           <button
             className="btn btn-primary btn-sm"
-            onClick={() => toast('Brouillon de script ajouté à vos idées')}
+            onClick={() =>
+              saveItem(
+                'idea',
+                v.id,
+                { title: v.title, niche: v.niche, hook: v.hook.text, sound: v.sound.name, cta: v.cta, growth: v.growth, prodTime: v.prodTime },
+                'Idée ajoutée à votre bibliothèque',
+              )
+            }
           >
-            <Wand /> Générer mon script
+            <Wand /> Sauvegarder l&apos;idée
           </button>
         </div>
       </div>

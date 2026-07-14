@@ -1,8 +1,9 @@
 'use client';
 
 import type { Hook } from '@/lib/data';
-import { Copy } from '@/components/icons';
+import { Copy, Save } from '@/components/icons';
 import { toast } from '@/components/toaster';
+import { saveItem } from '@/lib/library';
 
 export function HookCard({ hook: h, delay = 0 }: { hook: Hook; delay?: number }) {
   return (
@@ -26,7 +27,20 @@ export function HookCard({ hook: h, delay = 0 }: { hook: Hook; delay?: number })
             toast('Hook copié dans le presse-papiers');
           }}
         >
-          <Copy /> Copier le hook
+          <Copy /> Copier
+        </button>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() =>
+            saveItem(
+              'hook',
+              h.id,
+              { text: h.text, type: h.type, performance: h.performance, explanation: h.explanation },
+              'Hook ajouté à votre bibliothèque',
+            )
+          }
+        >
+          <Save /> Sauvegarder
         </button>
       </div>
     </article>

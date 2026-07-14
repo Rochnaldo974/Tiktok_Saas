@@ -4,7 +4,7 @@ import type { Sound } from '@/lib/data';
 import { fmt, dur } from '@/lib/data';
 import { artworkStyle } from '@/lib/visuals';
 import { Music, Save } from '@/components/icons';
-import { toast } from '@/components/toaster';
+import { saveItem } from '@/lib/library';
 
 export function SoundCard({ sound: s, delay = 0 }: { sound: Sound; delay?: number }) {
   return (
@@ -28,7 +28,14 @@ export function SoundCard({ sound: s, delay = 0 }: { sound: Sound; delay?: numbe
       <div className="card-actions">
         <button
           className="btn btn-secondary btn-sm"
-          onClick={() => toast(`« ${s.name} » ajouté à votre bibliothèque de sons`)}
+          onClick={() =>
+            saveItem(
+              'sound',
+              s.id,
+              { name: s.name, artist: s.artist, growth: s.growth, videos: s.videos, note: s.note },
+              `« ${s.name} » ajouté à votre bibliothèque`,
+            )
+          }
         >
           <Save /> Sauvegarder le son
         </button>

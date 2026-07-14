@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
-import { Bolt, Today, Ideas, Copilot, Alerts, Settings } from '@/components/icons';
+import { Bolt, Today, Ideas, Copilot, Alerts, Save, Settings } from '@/components/icons';
 import { resolveCountry } from '@/lib/data';
 
 const NAV = [
@@ -11,6 +11,7 @@ const NAV = [
   { id: 'ideas', label: 'Idées', href: '/idees', icon: Ideas },
   { id: 'copilot', label: 'Copilote IA', href: '/copilote', icon: Copilot },
   { id: 'alerts', label: 'Alertes', href: '/alertes', icon: Alerts, badge: '3' },
+  { id: 'library', label: 'Bibliothèque', href: '/bibliotheque', icon: Save },
   { id: 'settings', label: 'Réglages', href: '/reglages', icon: Settings },
 ] as const;
 
