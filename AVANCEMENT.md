@@ -79,6 +79,23 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Vérifié : build + lint OK, 5 routes en 200, pages testées en navigateur,
       persistance des préférences validée (cookie → rendu serveur)
 
+### 2026-07-15 — Dashboard personnalisé par niches (feedback produit utilisateur)
+- [x] **Onboarding première visite** (`src/components/onboarding.tsx`) : choix
+      des niches + marché obligatoire avant d'afficher le dashboard —
+      c'est ainsi qu'on « sait » ce que crée l'utilisateur
+- [x] **Hero personnalisé** : brief, plan du jour et compteur « au pic »
+      calculés dans les niches suivies (plus jamais « Immobilier bouge »
+      pour un créateur Fitness)
+- [x] Nouvelle section « À filmer en priorité » (vidéos des niches suivies),
+      le viral global passe en second avec badge « Hors de vos niches »
+- [x] Carte rail « **Format transférable** » : le top hors-niche présenté
+      comme opportunité à transposer (CTA vers le copilote)
+- [x] Hooks / hashtags / créateurs triés : ceux des niches suivies d'abord
+- [x] `getPrefsState()` (`src/lib/prefs.ts`) distingue « cookie absent »
+      (→ onboarding) de « préférences choisies »
+- [x] Vérifié : build + lint OK, parcours onboarding → dashboard testé en
+      navigateur, personnalisation validée par cookie côté serveur
+
 ---
 
 ## 🔜 Immédiat
@@ -140,3 +157,5 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Routes en français (`/idees`, `/copilote`, `/alertes`, `/reglages`) | Cohérence produit pour une audience francophone |
 | 2026-07-15 | Préférences via cookie `sig-prefs` (non httpOnly, validées en liste blanche à la lecture) | Lisible serveur ET client sans auth ; migrera vers `profiles` avec Supabase Auth |
 | 2026-07-15 | Supabase : clé publishable côté client, sécurité par policies RLS ; CSP `connect-src` limitée au domaine du projet | Modèle de sécurité standard Supabase, pas de secret dans le code |
+| 2026-07-15 | Le dashboard est centré sur les niches suivies ; le viral global est secondaire (badge « Hors de vos niches », carte « Format transférable ») | Feedback utilisateur : un créateur veut d'abord SA niche ; le hors-niche n'a de valeur que si le format est transposable |
+| 2026-07-15 | Onboarding bloquant à la première visite (choix des niches) | Sans cette donnée, aucune personnalisation n'est honnête ; à terme : déduction via le @handle TikTok |

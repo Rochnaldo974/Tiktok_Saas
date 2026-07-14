@@ -7,7 +7,16 @@ import { ThumbBg } from '@/components/cards/thumb';
 import { Up, Play, Eye, Heart, Sparkle, Music } from '@/components/icons';
 import { toast } from '@/components/toaster';
 
-export function VideoCard({ video: v, delay = 0 }: { video: Video; delay?: number }) {
+export function VideoCard({
+  video: v,
+  delay = 0,
+  outside = false,
+}: {
+  video: Video;
+  delay?: number;
+  /* Vrai quand la vidéo sort des niches suivies par l'utilisateur. */
+  outside?: boolean;
+}) {
   return (
     <article className="card video-card reveal" style={{ animationDelay: `${delay}ms` }}>
       <div className="thumb">
@@ -44,6 +53,7 @@ export function VideoCard({ video: v, delay = 0 }: { video: Video; delay?: numbe
           <span>{v.summary} <strong>{v.context}</strong></span>
         </div>
         <div className="chip-row">
+          {outside && <span className="chip warn">Hors de vos niches</span>}
           <span className="chip"><Music /> {v.sound.name}</span>
           <span className="chip">Hook : {v.hook.type}</span>
         </div>
