@@ -138,6 +138,25 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Vérifié : build + lint OK, panneau testé en navigateur (2 onglets,
       script minuté correct)
 
+### 2026-07-15 — Génération IA (API Claude) + badge Alertes dynamique
+- [x] **Route serveur `/api/script`** (`src/app/api/script/route.ts`) :
+      appel à l'API Claude (`claude-opus-4-8`, pensée adaptative, effort low,
+      **structured outputs** → JSON toujours valide), réservée aux utilisateurs
+      connectés, entrée validée en liste blanche, erreurs typées (401/400/429/502/503)
+- [x] Bouton « **Rédiger avec l'IA** » dans l'onglet Mon script du panneau :
+      remplace le script local par un script rédigé par Claude (répliques
+      exactes en français + indications de tournage), blocs toujours éditables ;
+      le script local déterministe reste le fallback instantané
+- [x] Dégradation propre sans `ANTHROPIC_API_KEY` : 503 explicite, l'app
+      fonctionne normalement — **la clé est à ajouter dans `.env.local`**
+      (voir `.env.example`) ; côté serveur uniquement, jamais exposée au client
+- [x] **Badge Alertes dynamique** : construction des alertes extraite dans
+      `src/lib/alerts.ts` (partagée page + sidebar) — le badge affiche le
+      nombre réel d'alertes et correspond toujours au contenu de la page
+- [x] Vérifié : build + lint OK, 503 sans clé testé, badge (7) = nombre de
+      lignes de la page Alertes ; **test de génération réelle à faire quand
+      la clé sera fournie**
+
 ---
 
 ## 🔜 Immédiat
@@ -161,7 +180,7 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Page **Alertes** — fait le 2026-07-15 (badge sidebar « 3 » encore statique)
 - [x] Page **Réglages** — fait le 2026-07-15 (préférences cookie)
 - [x] Panneau latéral Analyse + générateur de script — fait le 2026-07-15
-- [ ] Badge Alertes dynamique dans la sidebar (nombre réel d'alertes)
+- [x] Badge Alertes dynamique — fait le 2026-07-15
 
 ### P2 — Backend réel
 - [x] Projet Supabase + schéma (`profiles`, `saved_items`, RLS) — fait le 2026-07-15
@@ -173,9 +192,12 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       de `src/lib/data.ts` (l'interface typée `Dataset` est le contrat à garder)
 
 ### P3 — Industrialisation
-- [ ] Génération IA réelle des scripts/analyses (API Claude — modèle
-      `claude-sonnet-5` par défaut) : remplacer `answer()` dans
-      `src/components/copilot/chat.tsx` par une route serveur
+- [x] Génération IA des scripts (API Claude, `claude-opus-4-8`) — fait le
+      2026-07-15 ; **reste** : fournir `ANTHROPIC_API_KEY` dans `.env.local`
+      et tester une génération réelle
+- [ ] Copilote IA réel : remplacer `answer()` dans
+      `src/components/copilot/chat.tsx` par une route serveur API Claude
+      (même pattern que `/api/script`)
 - [ ] Tests E2E (Playwright) + CI GitHub Actions (build, lint, tests)
 - [ ] Déploiement (Vercel) + domaine — penser aux variables d'env Supabase
 - [ ] Billing/abonnements (Stripe)

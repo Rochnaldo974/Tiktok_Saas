@@ -7,7 +7,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const prefs = await getPrefs();
   return (
     <div className="shell">
-      <Sidebar defaultCountry={prefs.country} />
+      <Sidebar
+        defaultCountry={prefs.country}
+        defaultTimeframe={prefs.tf}
+        followedNiches={prefs.niches}
+      />
       <div className="main">
         <Topbar defaultCountry={prefs.country} defaultTimeframe={prefs.tf} />
         {children}

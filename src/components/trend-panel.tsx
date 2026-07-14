@@ -3,10 +3,10 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Video } from '@/lib/data';
 import { fmt, dur, STATUS_LABELS, DIFFICULTY_LABELS, SATURATION_LABELS } from '@/lib/data';
-import { buildScript, scriptToText } from '@/lib/script';
+import { buildScript, scriptToText, type ScriptSection } from '@/lib/script';
 import { saveItem } from '@/lib/library';
 import { toast } from '@/components/toaster';
-import { X, Copy, Save, Sparkle, Music, Quote, Eye, Up } from '@/components/icons';
+import { X, Copy, Save, Sparkle, Music, Quote, Eye, Up, Wand } from '@/components/icons';
 
 /* Panneau latéral Analyse + Script : le dernier maillon insight → action.
    Ouvrable depuis n'importe quelle carte via openTrendPanel() (événement
@@ -23,6 +23,9 @@ export function TrendPanel() {
   const [video, setVideo] = useState<Video | null>(null);
   const [tab, setTab] = useState<Tab>('analyse');
   const [open, setOpen] = useState(false);
+  const [sections, setSections] = useState<ScriptSection[]>([]);
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiGenerated, setAiGenerated] = useState(false);
   const scriptRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,6 +33,8 @@ export function TrendPanel() {
       const { video, tab } = (e as CustomEvent<{ video: Video; tab: Tab }>).detail;
       setVideo(video);
       setTab(tab);
+      setSections(buildScript(video));
+      setAiGenerated(false);
       setOpen(true);
     }
     function onKey(e: KeyboardEvent) {
@@ -45,7 +50,39 @@ export function TrendPanel() {
 
   if (!video) return null;
   const v = video;
-  const sections = buildScript(v);
+
+  async function generateWithAI() {
+    if (aiBusy) return;
+    setAiBusy(true);
+    try {
+      const res = await fetch('/api/script', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: v.title,
+          niche: v.niche,
+          hook: v.hook.text,
+          sound: v.sound.name,
+          cta: v.cta,
+          contentType: v.contentType,
+          duration: v.duration,
+          summary: v.summary,
+        }),
+      });
+      const data = (await res.json()) as { sections?: ScriptSection[]; error?: string };
+      if (!res.ok || !data.sections) {
+        toast(data.error ?? 'Génération impossible — le script local reste disponible.');
+        return;
+      }
+      setSections(data.sections);
+      setAiGenerated(true);
+      toast('Script généré par l’IA — relisez et adaptez à votre voix');
+    } catch {
+      toast('Génération impossible — vérifiez votre connexion.');
+    } finally {
+      setAiBusy(false);
+    }
+  }
 
   /* Le script est éditable : la copie/sauvegarde lit le texte réellement affiché. */
   function currentScript(): string {
@@ -144,12 +181,31 @@ export function TrendPanel() {
           </div>
         ) : (
           <div className="panel-body" ref={scriptRef}>
-            <p style={{ color: 'var(--muted)', fontSize: 13 }}>
-              Votre plan de tournage, minuté sur {dur(v.duration)} avec le son « {v.sound.name} ».
-              Chaque bloc est modifiable — cliquez dans le texte pour l&apos;adapter à votre voix.
-            </p>
-            {sections.map((s) => (
-              <div className="script-block" key={s.label}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <p style={{ color: 'var(--muted)', fontSize: 13, flex: 1, minWidth: 200 }}>
+                {aiGenerated
+                  ? 'Script rédigé par l’IA à partir de la tendance — chaque bloc reste modifiable.'
+                  : `Plan de tournage minuté sur ${dur(v.duration)} avec le son « ${v.sound.name} » — modifiable au clic.`}
+              </p>
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={generateWithAI}
+                disabled={aiBusy}
+                style={{ flex: 'none' }}
+              >
+                <Wand /> {aiBusy ? 'Génération...' : aiGenerated ? 'Regénérer' : 'Rédiger avec l’IA'}
+              </button>
+            </div>
+            {aiBusy && (
+              <div className="script-block" aria-live="polite">
+                <h5>Rédaction en cours <span className="typing" style={{ padding: 0 }}><i /><i /><i /></span></h5>
+                <p style={{ fontSize: 13, color: 'var(--faint)' }}>
+                  L&apos;IA écrit vos répliques à partir de la tendance...
+                </p>
+              </div>
+            )}
+            {sections.map((s, i) => (
+              <div className="script-block" key={`${aiGenerated ? 'ai' : 'local'}-${i}`}>
                 <h5>{s.label} <span>{s.time}</span></h5>
                 <p
                   data-script-text
