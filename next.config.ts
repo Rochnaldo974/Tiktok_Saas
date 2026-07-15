@@ -16,7 +16,8 @@ const csp = [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data:",
+  // CDN TikTok : miniatures des vidéos réelles (provider de données)
+  "img-src 'self' data: https://*.tiktokcdn.com https://*.tiktokcdn-us.com https://*.tiktokcdn-eu.com",
   "font-src 'self'",
   `connect-src ${connectSrc}`,
   "frame-ancestors 'none'",

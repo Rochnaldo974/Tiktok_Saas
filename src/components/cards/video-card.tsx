@@ -21,21 +21,31 @@ export function VideoCard({
     <article className="card video-card reveal" style={{ animationDelay: `${delay}ms` }}>
       <a
         className="thumb"
-        href={`https://www.tiktok.com/search?q=${encodeURIComponent(v.title)}`}
+        href={v.url ?? `https://www.tiktok.com/search?q=${encodeURIComponent(v.title)}`}
         target="_blank"
         rel="noopener noreferrer"
-        title="Voir les vidéos de ce sujet sur TikTok"
-        aria-label={`Voir les vidéos « ${v.title} » sur TikTok`}
+        title={v.real ? 'Ouvrir la vidéo sur TikTok' : 'Voir les vidéos de ce sujet sur TikTok'}
+        aria-label={`Ouvrir « ${v.title} » sur TikTok`}
         style={{ display: 'block', cursor: 'pointer' }}
       >
-        <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
+        {v.cover ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={v.cover} alt="" className="thumb-bg" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+        ) : (
+          <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
+        )}
         <div className="thumb-top">
           <span className="badge green"><Up /> +{v.growth} %</span>
-          <span className="badge">{dur(v.duration)}</span>
+          <span style={{ display: 'flex', gap: 6 }}>
+            {v.real && <span className="badge cyan">Réel</span>}
+            <span className="badge">{dur(v.duration)}</span>
+          </span>
         </div>
         <div className="play-hint">
           <span className="circle"><Play /></span>
-          <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>Voir sur TikTok</span>
+          <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>
+            {v.real ? 'Ouvrir sur TikTok' : 'Voir sur TikTok'}
+          </span>
         </div>
         <div className="tt-rail" aria-hidden="true">
           <span className="avatar-sm" style={avatarStyle(v.creator.hue)}>{v.creator.initials}</span>

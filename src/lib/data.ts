@@ -86,6 +86,10 @@ export const SATURATION_LABELS: Record<Saturation, string> = {
 
 export interface Video {
   id: string;
+  /* Données réelles (provider TikTok) : miniature, lien direct, marqueur. */
+  cover?: string;
+  url?: string;
+  real?: boolean;
   title: string;
   niche: string;
   hue: number;
@@ -520,6 +524,113 @@ export function dataset(countryName: string, timeframe: string, extraNiches: str
   const ds: Dataset = { creators, sounds, hooks, hashtags, videos };
   cache.set(key, ds);
   return ds;
+}
+
+/* ---------- vidéos réelles (provider TikTok) ----------
+   Le provider ne fournit que les faits bruts (titre, stats, cover, lien) ;
+   tout l'enrichissement éditorial (hook dans la niche, plan de prod,
+   explications) est dérivé ici, de façon déterministe par vidéo. */
+export interface RealVideoInput {
+  id: string;
+  title: string;
+  niche: string;
+  country: string;
+  views: number;
+  likes: number;
+  comments: number;
+  shares: number;
+  duration: number;
+  createTime?: number;
+  creatorHandle: string;
+  creatorFollowers: number;
+  soundName: string;
+  soundArtist: string;
+  cover: string;
+  url: string;
+}
+
+export function realVideo(input: RealVideoInput): Video {
+  const rnd = mulberry32(hashStr('real|' + input.id));
+  const engagement = input.views > 0 ? (input.likes + input.comments * 3 + input.shares * 5) / input.views : 0;
+  const growth = Math.max(25, Math.min(1900, Math.round(engagement * 6000)));
+  const duration = Math.max(5, Math.min(180, Math.round(input.duration)));
+  const status: TrendStatus = growth > 900 ? 'Peaking' : growth > 400 ? 'Growing' : growth > 150 ? 'New' : 'Saturated';
+  const diff: Difficulty = duration < 20 ? 'Easy' : duration < 38 ? 'Medium' : 'Hard';
+  const prod = diff === 'Easy' ? pick(rnd, ['15 min', '35 min']) : diff === 'Medium' ? pick(rnd, ['35 min', '1 heure']) : '2 heures';
+  const sat: Saturation = status === 'Saturated' ? 'High' : status === 'Peaking' ? 'Medium' : 'Low';
+  const hookTemplate = pick(rnd, VIDEO_HOOK_TEMPLATES);
+  const nicheLower = input.niche.charAt(0).toLowerCase() + input.niche.slice(1);
+  const hoursAgo = input.createTime
+    ? Math.max(1, Math.round((Date.now() / 1000 - input.createTime) / 3600))
+    : int(rnd, 2, 46);
+  const handle = input.creatorHandle.startsWith('@') ? input.creatorHandle : '@' + input.creatorHandle;
+  return {
+    id: 'r' + input.id,
+    cover: input.cover,
+    url: input.url,
+    real: true,
+    title: input.title,
+    niche: input.niche,
+    hue: hashStr(input.niche) % 360,
+    angle: int(rnd, 100, 260),
+    country: input.country,
+    creator: {
+      id: 'rc' + input.id,
+      handle,
+      niche: input.niche,
+      hue: hashStr(handle) % 360,
+      country: input.country,
+      followers: input.creatorFollowers,
+      growth: int(rnd, 4, 120) / 10,
+      avgViews: input.views,
+      engagement: Math.min(15, engagement * 100).toFixed(1),
+      reason: pick(rnd, AI_CREATOR_REASONS),
+      initials: handle.slice(1, 3).toUpperCase(),
+    },
+    sound: {
+      id: 'rs' + input.id,
+      name: input.soundName || 'Son original',
+      artist: input.soundArtist || handle,
+      hue: hashStr(input.soundName) % 360,
+      videos: int(rnd, 300, 48000),
+      growth: int(rnd, 15, 640),
+      rising: rnd() > 0.5,
+      note: pick(rnd, AI_SOUND_NOTES),
+      duration: Math.min(60, duration),
+    },
+    hook: {
+      id: 'rh' + input.id,
+      text: hookTemplate.text.replace('{t}', nicheLower),
+      type: hookTemplate.type,
+      performance: int(rnd, 70, 97),
+      industries: [input.niche],
+      avgDuration: duration,
+      explanation: pick(rnd, HOOK_EXPLANATIONS),
+    },
+    contentType: pick(rnd, CONTENT_TYPES),
+    duration,
+    views: input.views,
+    likes: input.likes,
+    comments: input.comments,
+    shares: input.shares,
+    growth,
+    viralScore: Math.min(99, Math.round(52 + growth / 28 + rnd() * 14)),
+    opportunity: Math.min(98, Math.round(45 + (sat === 'Low' ? 26 : sat === 'Medium' ? 12 : 0) + rnd() * 22)),
+    status,
+    difficulty: diff,
+    diffReason: DIFF_REASONS[diff],
+    prodTime: prod,
+    prodReason: PROD_REASONS[prod],
+    budget: pick(rnd, ['Gratuit', 'Gratuit', 'Faible', 'Moyen']),
+    saturation: sat,
+    satReason: SAT_REASONS[sat],
+    chips: [...WHY_CHIPS].sort(() => rnd() - 0.5).slice(0, 3),
+    emotions: [...EMOTIONS].sort(() => rnd() - 0.5).slice(0, 2),
+    cta: pick(rnd, CTAS),
+    uploadedH: hoursAgo,
+    summary: pick(rnd, AI_VIDEO_REASONS),
+    context: pick(rnd, AI_VIDEO_CONTEXT),
+  };
 }
 
 /* ---------- validation des paramètres d'URL ---------- */

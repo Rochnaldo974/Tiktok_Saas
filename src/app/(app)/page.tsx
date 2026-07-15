@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
+import { getRealVideos } from '@/lib/providers/tiktok';
 import { getPrefsState } from '@/lib/prefs';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { Onboarding } from '@/components/onboarding';
@@ -36,8 +37,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   const inNiches = (niche: string) => followed.includes(niche);
 
   /* Le brief est calculé DANS les niches du créateur ; le viral global
-     reste visible plus bas, marqué quand il sort de son périmètre. */
-  const myVideos = d.videos.filter((v) => inNiches(v.niche));
+     reste visible plus bas, marqué quand il sort de son périmètre.
+     Si le provider de données réelles est actif, les vidéos des niches
+     suivies sont de VRAIES vidéos TikTok (miniature + lien). */
+  const realVideos = await getRealVideos(followed, country);
+  const mockMine = d.videos.filter((v) => inNiches(v.niche));
+  const myVideos = realVideos.length ? realVideos : mockMine;
   const topVideo = myVideos[0] ?? d.videos[0];
   const topSound = d.sounds[0];
   const topHook = d.hooks.find((h) => h.industries.some(inNiches)) ?? d.hooks[0];
@@ -295,8 +300,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             <span className="v">{today}</span>
           </div>
           <p style={{ marginTop: 12, fontSize: 11, color: 'var(--faint)', lineHeight: 1.5 }}>
-            Tendances simulées pour la démo — le branchement aux données TikTok réelles est en
-            cours. L&apos;analyse de profil, elle, utilise déjà de vraies données.
+            {realVideos.length
+              ? 'Les vidéos de vos niches sont de vraies vidéos TikTok (badge « Réel »). Les autres modules restent simulés.'
+              : "Tendances simulées pour la démo — le branchement aux données TikTok réelles est en cours. L'analyse de profil, elle, utilise déjà de vraies données."}
           </p>
         </div>
         {transferable && (

@@ -244,6 +244,25 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       carte) — les vignettes ne font plus vides et évoquent de vraies
       captures ; en attendant les vraies miniatures (données réelles P2)
 
+### 2026-07-15 — Pipeline de données TikTok réelles (prêt à activer)
+- [x] Sondes finales : seuls les **profils** TikTok sont lisibles sans clé
+      (déjà exploité) ; hashtags/tendances = API signée → un provider est
+      indispensable (comme pour tous les SaaS du marché)
+- [x] **Provider EnsembleData** (`src/lib/providers/tiktok.ts`) : vraies
+      vidéos par niche suivie (posts du hashtag), cache serveur 45 min,
+      parsing défensif, fallback silencieux vers la démo
+- [x] `realVideo()` dans `data.ts` : le provider fournit les faits bruts
+      (titre, stats, miniature, lien), l'enrichissement éditorial FR
+      (hook dans la niche, plan de prod, explications) est dérivé
+- [x] Rendu : **vraies miniatures** (img CDN TikTok, CSP ouverte à
+      `*.tiktokcdn*`), **lien direct vers la vidéo**, badge « Réel »,
+      note du rail adaptée ; intégré au brief (hero + À filmer en priorité)
+      et au flux Idées (réelles en premier)
+- [ ] **ACTIVATION — action utilisateur** : créer un compte d'essai gratuit
+      sur https://ensembledata.com, coller le token dans `.env.local`
+      (`ENSEMBLEDATA_TOKEN=...`), redémarrer — puis test en réel à faire
+- [x] Vérifié sans token : mode démo intact (build + lint + rendu OK)
+
 ---
 
 ## 🔜 Immédiat

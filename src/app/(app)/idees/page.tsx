@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { dataset, resolveCountry, resolveTimeframe } from '@/lib/data';
+import { getRealVideos } from '@/lib/providers/tiktok';
 import { getPrefs } from '@/lib/prefs';
 import { IdeasFilters } from '@/components/ideas/filters';
 import { IdeaCard } from '@/components/ideas/idea-card';
@@ -26,7 +27,8 @@ export default async function IdeasPage({ searchParams }: { searchParams: Search
   const status = params.status ?? '';
 
   const d = dataset(country, timeframe, prefs.niches);
-  const ideas = d.videos
+  const realVideos = await getRealVideos(prefs.niches, country);
+  const ideas = [...realVideos, ...d.videos]
     .filter((v) => {
       if (niche && v.niche !== niche) return false;
       if (status && v.status !== status) return false;
