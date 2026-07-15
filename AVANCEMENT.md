@@ -191,6 +191,27 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       les **tendances** restent simulées (l'API Creative Center exige une
       signature) → voir backlog P2
 
+### 2026-07-15 — Retours de test utilisateur : clarté, cohérence, page Analyse
+- [x] **Hooks cohérents** : les vidéos avaient des hooks hors sujet (« routine
+      du matin » sur une vidéo musique IA) — désormais générés DANS la niche
+      de la vidéo (`VIDEO_HOOK_TEMPLATES`, formulés pour tout nom de niche) ;
+      chips réduites (3 max), émotions à 2
+- [x] **Carte idée simplifiée** (retour « trop d'infos, pas clair ») :
+      3 chiffres (score, production, saturation) au lieu de 6, plus de
+      double rangée de chips, checklist « Votre version, en 3 étapes »
+- [x] **Transparence démo** : mention discrète dans le rail du dashboard —
+      tendances simulées, analyse de profil en vraies données
+- [x] **Page /analyse dédiée** (retour « l'analyse est le point fort mais
+      trop courte ») : audit stratégique complet via `/api/profil` en mode
+      `deep` (effort medium, schéma riche) — score de potentiel /100 avec
+      ring, positionnement 3-4 phrases, forces/faiblesses, **plan d'action
+      J1→J7**, **3 idées de vidéos sur mesure avec hooks**, **bio optimisée
+      prête à coller** ; entrée « Analyse » dans la sidebar ; dernier audit
+      mémorisé dans le profil et ré-affiché
+- [x] Testé en réel (@leaelui) : audit d'une justesse frappante — exploite
+      les vrais chiffres (ratio likes/vidéos, fréquence), plan J1-J7
+      actionnable, idées personnalisées pertinentes
+
 ---
 
 ## 🔜 Immédiat

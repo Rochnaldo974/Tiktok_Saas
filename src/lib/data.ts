@@ -243,6 +243,20 @@ const HOOK_TEMPLATES = [
 ];
 const HOOK_TOPICS = ['ton budget', 'ta routine du matin', 'le meal prep', 'ta skincare', 'la location', 'le voyage en solo', 'les parties ranked', 'ta productivité', 'ta première pub', 'tes révisions', "l'épargne", 'le sport à la maison', 'la cuisson des pâtes', 'le maquillage', "la recherche d'appart", 'les vols pas chers', "l'entraînement d'aim", 'la slow life', 'les hooks', "l'apprentissage des langues"];
 
+/* Hooks de vidéo : générés DANS la niche de la vidéo (un créateur
+   musique IA ne doit jamais voir un hook « routine du matin »).
+   Formulés pour accepter n'importe quel nom de niche tel quel. */
+const VIDEO_HOOK_TEMPLATES = [
+  { text: 'Personne ne montre cette astuce en {t}.', type: 'Curiosité' },
+  { text: "L'erreur n°1 des débutants en {t}.", type: 'Diagnostic' },
+  { text: "J'ai fait 30 jours de {t}, voilà le verdict.", type: 'Expérience' },
+  { text: 'POV : tu te lances en {t}.', type: 'POV' },
+  { text: 'Ce que personne ne te dit avant de te lancer en {t}.', type: 'Confession' },
+  { text: '3 secondes pour comprendre pourquoi tu stagnes en {t}.', type: 'Défi' },
+  { text: 'Le secret que les pros de {t} gardent pour eux.', type: 'Autorité' },
+  { text: 'Regarde ça avant de dépenser un centime en {t}.', type: 'Avertissement' },
+];
+
 const HASHTAG_BASE = ['fyp', 'pourtoi', 'viral', 'apprendresurtiktok', 'tiktokacademie', 'astucescreateur', 'moneytok', 'fittok', 'foodtok', 'beautytok', 'immobilier', 'traveltok', 'gamingfr', 'lifestyle', 'marketingdigital', 'studytok', 'budget2026', 'gymtok', 'recetterapide', 'glowup', 'appartparis', 'cityguide', 'setupwars', 'morningroutine', 'growthhacking', 'periodedexam', 'epargne', 'homeworkout', 'batchcooking', 'skincareroutine', 'visiteappart', 'vanlife', 'esports', 'declutter', 'ugccreator', 'flashcards', 'investir', 'stretching', 'airfryer', 'maquillage', 'negociation', 'roadtrip', 'speedrun', 'slowliving', 'copywriting', 'memorisation', 'cryptofr', 'pilates', 'streetfood', 'cheveux'];
 
 const WHY_CHIPS = ['Hook de curiosité', 'Montage rapide', 'CTA fort', 'Son tendance', 'Storytelling', 'Émotion', 'Relatable', 'Clivant', 'Éducatif', 'Authentique'];
@@ -422,14 +436,25 @@ function buildHashtags(rnd: Rnd, n: number, allNiches: Niche[], customs: string[
   return out.sort((a, b) => b.growth - a.growth);
 }
 
-function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sound[], hooks: Hook[], n: number, niches: Niche[]): Video[] {
+function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sound[], n: number, niches: Niche[]): Video[] {
   const out: Video[] = [];
   for (let i = 0; i < n; i++) {
     const niche = niches[(i + int(rnd, 0, 2)) % niches.length];
     const nicheCreators = creators.filter((c) => c.niche === niche.name);
     const creator = nicheCreators.length ? pick(rnd, nicheCreators) : pick(rnd, creators);
     const sound = pick(rnd, sounds);
-    const hook = pick(rnd, hooks);
+    // Hook cohérent : toujours dans la niche de la vidéo.
+    const hookTemplate = pick(rnd, VIDEO_HOOK_TEMPLATES);
+    const nicheLower = niche.name.charAt(0).toLowerCase() + niche.name.slice(1);
+    const hook: Hook = {
+      id: 'vh' + i,
+      text: hookTemplate.text.replace('{t}', nicheLower),
+      type: hookTemplate.type,
+      performance: int(rnd, 70, 97),
+      industries: [niche.name],
+      avgDuration: int(rnd, 12, 34),
+      explanation: pick(rnd, HOOK_EXPLANATIONS),
+    };
     const views = int(rnd, 40, 8200) * 1000;
     const growth = int(rnd, 40, 1900);
     const duration = int(rnd, 9, 58);
@@ -437,8 +462,8 @@ function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sou
     const diff: Difficulty = duration < 20 ? 'Easy' : duration < 38 ? 'Medium' : 'Hard';
     const prod = diff === 'Easy' ? pick(rnd, ['15 min', '35 min']) : diff === 'Medium' ? pick(rnd, ['35 min', '1 heure']) : '2 heures';
     const sat: Saturation = status === 'Saturated' ? 'High' : status === 'Peaking' ? 'Medium' : 'Low';
-    const chips = [...WHY_CHIPS].sort(() => rnd() - 0.5).slice(0, int(rnd, 3, 5));
-    const emotions = [...EMOTIONS].sort(() => rnd() - 0.5).slice(0, int(rnd, 2, 3));
+    const chips = [...WHY_CHIPS].sort(() => rnd() - 0.5).slice(0, 3);
+    const emotions = [...EMOTIONS].sort(() => rnd() - 0.5).slice(0, 2);
     out.push({
       id: 'v' + i,
       title: pick(rnd, niche.topics),
@@ -491,7 +516,7 @@ export function dataset(countryName: string, timeframe: string, extraNiches: str
   const sounds = buildSounds(rnd, 60);
   const hooks = buildHooks(rnd, 100, allNiches);
   const hashtags = buildHashtags(rnd, 80, allNiches, customs);
-  const videos = buildVideos(rnd, countryName, creators, sounds, hooks, 120 + customs.length * 10, allNiches);
+  const videos = buildVideos(rnd, countryName, creators, sounds, 120 + customs.length * 10, allNiches);
   const ds: Dataset = { creators, sounds, hooks, hashtags, videos };
   cache.set(key, ds);
   return ds;

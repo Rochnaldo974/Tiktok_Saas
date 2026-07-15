@@ -93,6 +93,47 @@ const ANALYSIS_SCHEMA = {
   additionalProperties: false,
 } as const;
 
+/* Audit approfondi (page Analyse) : score, faiblesses, plan 7 jours,
+   idées de vidéos personnalisées, bio. */
+const DEEP_SCHEMA = {
+  type: 'object',
+  properties: {
+    niches: { type: 'array', items: { type: 'string' }, description: '1 à 3 niches principales, courtes' },
+    summary: {
+      type: 'string',
+      description: 'Positionnement du créateur en 3-4 phrases : ce qui le distingue, à qui il parle, où il en est',
+    },
+    score: {
+      type: 'integer',
+      description:
+        'Score de potentiel de croissance sur 100, calibré sur la taille et la cohérence du profil (un petit compte cohérent peut scorer haut)',
+    },
+    strengths: { type: 'array', items: { type: 'string' }, description: '3 forces concrètes' },
+    weaknesses: { type: 'array', items: { type: 'string' }, description: '3 axes d’amélioration francs et bienveillants' },
+    plan: {
+      type: 'array',
+      items: { type: 'string', description: 'Une action par jour, formulée à l’impératif, réalisable en moins d’une heure' },
+      description: 'Plan d’action sur 7 jours (7 entrées, jour par jour)',
+    },
+    videoIdeas: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          title: { type: 'string', description: 'Titre de la vidéo à tourner' },
+          hook: { type: 'string', description: 'Phrase d’ouverture exacte à dire face caméra' },
+        },
+        required: ['title', 'hook'],
+        additionalProperties: false,
+      },
+      description: '3 idées de vidéos taillées pour CE profil précis',
+    },
+    bioAdvice: { type: 'string', description: 'Proposition de bio TikTok optimisée (80 caractères max), prête à copier' },
+  },
+  required: ['niches', 'summary', 'score', 'strengths', 'weaknesses', 'plan', 'videoIdeas', 'bioAdvice'],
+  additionalProperties: false,
+} as const;
+
 export async function POST(request: NextRequest) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json(
@@ -111,6 +152,7 @@ export async function POST(request: NextRequest) {
 
   let handle: string | null = null;
   let description: string | null = null;
+  let deep = false;
   try {
     const body = (await request.json()) as Record<string, unknown>;
     if (typeof body.handle === 'string') {
@@ -121,6 +163,7 @@ export async function POST(request: NextRequest) {
       const cleaned = body.description.trim().slice(0, 600);
       if (cleaned.length >= 10) description = cleaned;
     }
+    deep = body.deep === true;
   } catch {
     /* corps invalide → géré ci-dessous */
   }
@@ -169,18 +212,20 @@ export async function POST(request: NextRequest) {
   try {
     const response = await client.messages.create({
       model: 'claude-opus-4-8',
-      max_tokens: 1500,
+      max_tokens: deep ? 3500 : 1500,
       thinking: { type: 'adaptive' },
       output_config: {
-        effort: 'low',
-        format: { type: 'json_schema', schema: ANALYSIS_SCHEMA },
+        effort: deep ? 'medium' : 'low',
+        format: { type: 'json_schema', schema: deep ? DEEP_SCHEMA : ANALYSIS_SCHEMA },
       },
       system:
-        "Tu es un consultant senior en stratégie TikTok, en français. À partir des informations publiques d'un profil (bio, stats) et/ou de la description du créateur, tu identifies ses niches précises (courtes, ex. « Danse », « Cuisine réunionnaise », « Coiffure afro ») et tu donnes des conseils concrets, actionnables aujourd'hui, adaptés à sa taille d'audience. Sois direct et utile, jamais générique.",
+        "Tu es un consultant senior en stratégie TikTok, en français. À partir des informations publiques d'un profil (bio, stats) et/ou de la description du créateur, tu identifies ses niches précises (courtes, ex. « Danse », « Cuisine réunionnaise », « Coiffure afro ») et tu donnes des conseils concrets, actionnables aujourd'hui, adaptés à sa taille d'audience. Sois direct et utile, jamais générique. Tutoie le créateur.",
       messages: [
         {
           role: 'user',
-          content: `Analyse ce créateur TikTok et détecte ses niches :\n\n${context}`,
+          content: deep
+            ? `Fais l'audit stratégique complet de ce créateur TikTok (positionnement, score de potentiel, forces, axes d'amélioration, plan d'action 7 jours, 3 idées de vidéos sur mesure, bio optimisée) :\n\n${context}`
+            : `Analyse ce créateur TikTok et détecte ses niches :\n\n${context}`,
         },
       ],
     });
@@ -192,9 +237,20 @@ export async function POST(request: NextRequest) {
     const raw = JSON.parse(text) as ProfileAnalysis;
     const analysis: ProfileAnalysis = {
       niches: normalizeNiches(raw.niches).slice(0, 3),
-      summary: String(raw.summary ?? '').slice(0, 600),
+      summary: String(raw.summary ?? '').slice(0, 900),
       strengths: (raw.strengths ?? []).map(String).slice(0, 3),
       advice: (raw.advice ?? []).map(String).slice(0, 4),
+      ...(deep
+        ? {
+            score: Math.max(0, Math.min(100, Math.round(Number(raw.score ?? 0)))),
+            weaknesses: (raw.weaknesses ?? []).map(String).slice(0, 3),
+            plan: (raw.plan ?? []).map(String).slice(0, 7),
+            videoIdeas: (raw.videoIdeas ?? [])
+              .slice(0, 3)
+              .map((v) => ({ title: String(v.title ?? ''), hook: String(v.hook ?? '') })),
+            bioAdvice: String(raw.bioAdvice ?? '').slice(0, 160),
+          }
+        : {}),
     };
     if (!analysis.niches.length) {
       return NextResponse.json({ error: 'Analyse inexploitable — réessayez.' }, { status: 502 });

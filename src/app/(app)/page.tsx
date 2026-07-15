@@ -230,6 +230,10 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             <span className="k"><Clock /> Brief mis à jour</span>
             <span className="v">{today}</span>
           </div>
+          <p style={{ marginTop: 12, fontSize: 11, color: 'var(--faint)', lineHeight: 1.5 }}>
+            Tendances simulées pour la démo — le branchement aux données TikTok réelles est en
+            cours. L&apos;analyse de profil, elle, utilise déjà de vraies données.
+          </p>
         </div>
         {transferable && (
           <div className="card rail-card reveal" style={{ animationDelay: '120ms' }}>

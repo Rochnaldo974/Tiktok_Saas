@@ -4,7 +4,7 @@ import type { Video } from '@/lib/data';
 import { fmt, dur, ago, STATUS_LABELS, DIFFICULTY_LABELS, SATURATION_LABELS } from '@/lib/data';
 import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
-import { Up, Play, Sparkle, Music, Check, X, Copy, Wand } from '@/components/icons';
+import { Up, Play, Sparkle, Check, Copy, Wand } from '@/components/icons';
 import { toast } from '@/components/toaster';
 import { openTrendPanel } from '@/components/trend-panel';
 
@@ -43,11 +43,8 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
         </div>
 
         <div className="fact-row">
-          <div className="fact"><b className="up">{v.viralScore}</b><span>Score viral</span></div>
-          <div className="fact"><b>{v.opportunity}</b><span>Opportunité</span></div>
-          <div className="fact"><b>{DIFFICULTY_LABELS[v.difficulty]}</b><span>Difficulté</span></div>
-          <div className="fact"><b>{v.prodTime}</b><span>Production</span></div>
-          <div className="fact"><b>{v.budget}</b><span>Budget</span></div>
+          <div className="fact"><b className="up">{v.viralScore}/100</b><span>Score viral</span></div>
+          <div className="fact"><b>{v.prodTime} · {DIFFICULTY_LABELS[v.difficulty]}</b><span>Production</span></div>
           <div className="fact"><b>{SATURATION_LABELS[v.saturation]}</b><span>Saturation</span></div>
         </div>
 
@@ -56,19 +53,12 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
           <span>{v.summary} <strong>{v.context}</strong></span>
         </div>
 
-        <div className="chip-row">
-          {v.chips.map((c) => <span key={c} className="chip good">{c}</span>)}
-          <span className="chip"><Music /> {v.sound.name}</span>
-          {v.emotions.map((e) => <span key={e} className="chip">{e}</span>)}
-        </div>
-
         <div className="copy-list">
-          <h5>Votre version</h5>
+          <h5>Votre version, en 3 étapes</h5>
           <ul>
             <li className="yes"><Check /> Ouvrir avec : « {v.hook.text} »</li>
-            <li className="yes"><Check /> {v.prodReason}</li>
+            <li className="yes"><Check /> Filmer avec le son « {v.sound.name} » — {v.prodReason.toLowerCase()}</li>
             <li className="yes"><Check /> Conclure avec : « {v.cta} »</li>
-            <li className="no"><X /> {v.satReason}</li>
           </ul>
         </div>
 

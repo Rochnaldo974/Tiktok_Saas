@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { Suspense, useMemo } from 'react';
-import { Bolt, Today, Ideas, Copilot, Alerts, Save, Settings } from '@/components/icons';
+import { Bolt, Today, Ideas, Radar, Copilot, Alerts, Save, Settings } from '@/components/icons';
 import { resolveCountry, resolveTimeframe } from '@/lib/data';
 import { buildAlerts } from '@/lib/alerts';
 import type { Timeframe } from '@/lib/data';
@@ -11,6 +11,7 @@ import type { Timeframe } from '@/lib/data';
 const NAV = [
   { id: 'today', label: "Aujourd'hui", href: '/', icon: Today },
   { id: 'ideas', label: 'Idées', href: '/idees', icon: Ideas },
+  { id: 'analyse', label: 'Analyse', href: '/analyse', icon: Radar },
   { id: 'copilot', label: 'Copilote IA', href: '/copilote', icon: Copilot },
   { id: 'alerts', label: 'Alertes', href: '/alertes', icon: Alerts },
   { id: 'library', label: 'Bibliothèque', href: '/bibliotheque', icon: Save },
