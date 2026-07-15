@@ -83,8 +83,11 @@ async function fetchNicheVideos(niche: string, country: string): Promise<Video[]
       console.error(`TikTok provider: ${res.status} pour #${tag}`);
       return hit?.videos ?? [];
     }
-    const payload = (await res.json()) as { data?: { posts?: RawPost[] } | RawPost[] };
-    const rawPosts = Array.isArray(payload.data) ? payload.data : payload.data?.posts ?? [];
+    const payload = (await res.json()) as {
+      data?: { posts?: RawPost[]; data?: RawPost[] } | RawPost[];
+    };
+    const d = payload.data;
+    const rawPosts = Array.isArray(d) ? d : d?.data ?? d?.posts ?? [];
     const videos = rawPosts
       .map((p) => mapPost(p, niche, country))
       .filter((v): v is Video => v !== null)

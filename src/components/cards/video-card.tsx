@@ -66,7 +66,7 @@ export function VideoCard({
             {v.creator.initials}
           </span>
           <span className="who">{v.creator.handle}</span>
-          <span className="what">· {fmt(v.creator.followers)} abonnés</span>
+          {v.creator.followers > 0 && <span className="what">· {fmt(v.creator.followers)} abonnés</span>}
         </div>
         <div className="video-stats">
           <span><Eye />{fmt(v.views)}</span>

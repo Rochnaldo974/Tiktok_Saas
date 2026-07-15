@@ -258,10 +258,16 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       `*.tiktokcdn*`), **lien direct vers la vidéo**, badge « Réel »,
       note du rail adaptée ; intégré au brief (hero + À filmer en priorité)
       et au flux Idées (réelles en premier)
-- [ ] **ACTIVATION — action utilisateur** : créer un compte d'essai gratuit
-      sur https://ensembledata.com, coller le token dans `.env.local`
-      (`ENSEMBLEDATA_TOKEN=...`), redémarrer — puis test en réel à faire
+- [x] **ACTIVÉ ET TESTÉ EN RÉEL** (2026-07-15, token fourni) : le dashboard
+      affiche de vraies vidéos TikTok — vraies miniatures (CDN signé),
+      vrais créateurs (@vham77 17 M de vues...), vrais compteurs, tri par
+      vues, lien direct — fix au passage : les posts sont dans
+      `data.data` (pas `data.posts`) ; « 0 abonnés » masqué (non fourni
+      par l'endpoint hashtag)
 - [x] Vérifié sans token : mode démo intact (build + lint + rendu OK)
+- [ ] Suite données réelles : sons/hashtags réels (endpoints EnsembleData
+      dédiés), pays passé au provider (l'endpoint hashtag est global),
+      surveiller le quota du token d'essai (cache 45 min en place)
 
 ---
 
