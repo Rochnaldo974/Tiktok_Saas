@@ -15,14 +15,6 @@ export function realDataEnabled(): boolean {
   return Boolean(process.env.ENSEMBLEDATA_TOKEN);
 }
 
-function nicheToTag(niche: string): string {
-  return niche
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9]/g, '');
-}
-
 /* Les posts EnsembleData suivent le format aweme de TikTok. */
 interface RawPost {
   aweme_id?: string;
@@ -35,7 +27,7 @@ interface RawPost {
   video?: { duration?: number; cover?: { url_list?: string[] }; origin_cover?: { url_list?: string[] } };
 }
 
-function mapPost(post: RawPost, niche: string, country: string): Video | null {
+function mapPost(post: RawPost, niche: string, country: string, generic = false): Video | null {
   const id = post.aweme_id;
   const stats = post.statistics;
   const cover =
@@ -46,9 +38,10 @@ function mapPost(post: RawPost, niche: string, country: string): Video | null {
   const title = (post.desc ?? '').replace(/#\S+/g, '').replace(/\s+/g, ' ').trim().slice(0, 90);
   return realVideo({
     id,
-    title: title || `Vidéo ${niche} de @${handle}`,
+    title: title || `Vidéo ${niche.toLowerCase()} de @${handle}`,
     niche,
     country,
+    generic,
     views: stats.play_count ?? 0,
     likes: stats.digg_count ?? 0,
     comments: stats.comment_count ?? 0,
@@ -64,41 +57,97 @@ function mapPost(post: RawPost, niche: string, country: string): Video | null {
   });
 }
 
-async function fetchNicheVideos(niche: string, country: string): Promise<Video[]> {
+/* La recherche par mot-clé accepte une période (jours) et un pays :
+   c'est elle qui donne des tendances FRAÎCHES (vs les tops historiques
+   du hashtag). Items enveloppés dans { aweme_info: {...} }. */
+const COUNTRY_CODES: Record<string, string> = {
+  France: 'fr',
+  'États-Unis': 'us',
+  'Royaume-Uni': 'gb',
+  Espagne: 'es',
+  Allemagne: 'de',
+  Italie: 'it',
+  Canada: 'ca',
+  Australie: 'au',
+};
+
+interface RawSearchItem {
+  aweme_info?: RawPost;
+}
+
+async function fetchKeywordVideos(
+  query: string,
+  niche: string,
+  country: string,
+  generic = false,
+  period = 7,
+): Promise<Video[]> {
   const token = process.env.ENSEMBLEDATA_TOKEN;
-  if (!token) return [];
-  const key = `${niche}|${country}`;
+  if (!token || !query) return [];
+  const key = `${query}|${country}|${generic}|${period}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.videos;
 
-  const tag = nicheToTag(niche);
-  if (!tag) return [];
   try {
-    const params = new URLSearchParams({ name: tag, cursor: '0', token });
-    const res = await fetch(`https://ensembledata.com/apis/tt/hashtag/posts?${params}`, {
+    const params = new URLSearchParams({
+      name: query,
+      cursor: '0',
+      period: String(period),
+      sorting: '1', // par likes — les tendances, pas le bruit
+      country: COUNTRY_CODES[country] ?? 'fr',
+      token,
+    });
+    const res = await fetch(`https://ensembledata.com/apis/tt/keyword/search?${params}`, {
       signal: AbortSignal.timeout(9000),
       cache: 'no-store',
     });
     if (!res.ok) {
-      console.error(`TikTok provider: ${res.status} pour #${tag}`);
+      console.error(`TikTok provider: ${res.status} pour « ${query} »`);
       return hit?.videos ?? [];
     }
     const payload = (await res.json()) as {
-      data?: { posts?: RawPost[]; data?: RawPost[] } | RawPost[];
+      data?: { data?: RawSearchItem[]; posts?: RawSearchItem[] } | RawSearchItem[];
     };
     const d = payload.data;
-    const rawPosts = Array.isArray(d) ? d : d?.data ?? d?.posts ?? [];
-    const videos = rawPosts
-      .map((p) => mapPost(p, niche, country))
+    const items = Array.isArray(d) ? d : d?.data ?? d?.posts ?? [];
+    const videos = items
+      .map((item) => (item.aweme_info ? mapPost(item.aweme_info, niche, country, generic) : null))
       .filter((v): v is Video => v !== null)
       .sort((a, b) => b.views - a.views)
       .slice(0, 8);
+
+    // Niche peu active sur 7 jours → on élargit à 30 (un seul retry).
+    if (videos.length < 4 && period === 7) {
+      return fetchKeywordVideos(query, niche, country, generic, 30);
+    }
     cache.set(key, { at: Date.now(), videos });
     return videos;
   } catch (error) {
     console.error('TikTok provider error', error);
     return hit?.videos ?? [];
   }
+}
+
+function fetchNicheVideos(niche: string, country: string): Promise<Video[]> {
+  return fetchKeywordVideos(niche.toLowerCase(), niche, country);
+}
+
+/* Tendances globales du pays (section « Viral en ce moment »). */
+const COUNTRY_TREND_QUERY: Record<string, string> = {
+  France: 'pourtoi',
+  'États-Unis': 'fyp',
+  'Royaume-Uni': 'fyp',
+  Espagne: 'parati',
+  Allemagne: 'fürdich',
+  Italie: 'perte',
+  Canada: 'pourtoi',
+  Australie: 'fyp',
+};
+
+export async function getGlobalRealVideos(country: string): Promise<Video[]> {
+  if (!realDataEnabled()) return [];
+  const query = COUNTRY_TREND_QUERY[country] ?? 'viral';
+  return fetchKeywordVideos(query, 'Tendance', country, true);
 }
 
 /* Vidéos réelles pour toutes les niches suivies, entrelacées

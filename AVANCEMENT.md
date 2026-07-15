@@ -265,9 +265,20 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       `data.data` (pas `data.posts`) ; « 0 abonnés » masqué (non fourni
       par l'endpoint hashtag)
 - [x] Vérifié sans token : mode démo intact (build + lint + rendu OK)
+- [x] **Fraîcheur corrigée** (retour utilisateur : vidéos de plusieurs
+      semaines) : bascule sur l'endpoint `keyword/search` avec **période
+      7 jours** (retry 30 j si niche peu active), **tri par likes** et
+      **filtre pays réel** (fr/us/gb...) — toutes les vidéos affichées ont
+      désormais entre 1 h et 7 j
+- [x] **« Viral en ce moment » aussi en réel** (le mélange réel/mock était
+      incohérent) : tendances du pays via le mot-clé local (#pourtoi,
+      #fyp, #parati...), hooks génériques sans niche
 - [ ] Suite données réelles : sons/hashtags réels (endpoints EnsembleData
-      dédiés), pays passé au provider (l'endpoint hashtag est global),
-      surveiller le quota du token d'essai (cache 45 min en place)
+      dédiés) ; « +X % » des vidéos réelles = estimé depuis l'engagement →
+      afficher plutôt vues/jour réelles ; à l'échelle : cache partagé
+      (table Supabase ou cron) au lieu du cache mémoire par instance ;
+      comparer les coûts EnsembleData vs Apify avant lancement ;
+      candidater à l'API officielle TikTok en parallèle
 
 ---
 

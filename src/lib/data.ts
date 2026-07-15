@@ -530,11 +530,22 @@ export function dataset(countryName: string, timeframe: string, extraNiches: str
    Le provider ne fournit que les faits bruts (titre, stats, cover, lien) ;
    tout l'enrichissement éditorial (hook dans la niche, plan de prod,
    explications) est dérivé ici, de façon déterministe par vidéo. */
+/* Hooks génériques pour les vidéos tendance globales (sans niche). */
+const GENERIC_VIDEO_HOOKS = [
+  { text: 'Regarde jusqu’à la fin, tu vas comprendre.', type: 'Curiosité' },
+  { text: 'Personne ne s’attendait à cette fin.', type: 'Surprise' },
+  { text: 'POV : tu tombes sur LA vidéo du jour.', type: 'POV' },
+  { text: 'Tout le monde refait ce format en ce moment.', type: 'Tendance' },
+  { text: 'Ce détail change tout — regarde bien.', type: 'Défi' },
+];
+
 export interface RealVideoInput {
   id: string;
   title: string;
   niche: string;
   country: string;
+  /* vrai pour les tendances globales : hook générique (pas de niche) */
+  generic?: boolean;
   views: number;
   likes: number;
   comments: number;
@@ -558,7 +569,7 @@ export function realVideo(input: RealVideoInput): Video {
   const diff: Difficulty = duration < 20 ? 'Easy' : duration < 38 ? 'Medium' : 'Hard';
   const prod = diff === 'Easy' ? pick(rnd, ['15 min', '35 min']) : diff === 'Medium' ? pick(rnd, ['35 min', '1 heure']) : '2 heures';
   const sat: Saturation = status === 'Saturated' ? 'High' : status === 'Peaking' ? 'Medium' : 'Low';
-  const hookTemplate = pick(rnd, VIDEO_HOOK_TEMPLATES);
+  const hookTemplate = input.generic ? pick(rnd, GENERIC_VIDEO_HOOKS) : pick(rnd, VIDEO_HOOK_TEMPLATES);
   const nicheLower = input.niche.charAt(0).toLowerCase() + input.niche.slice(1);
   const hoursAgo = input.createTime
     ? Math.max(1, Math.round((Date.now() / 1000 - input.createTime) / 3600))
@@ -600,7 +611,7 @@ export function realVideo(input: RealVideoInput): Video {
     },
     hook: {
       id: 'rh' + input.id,
-      text: hookTemplate.text.replace('{t}', nicheLower),
+      text: input.generic ? hookTemplate.text : hookTemplate.text.replace('{t}', nicheLower),
       type: hookTemplate.type,
       performance: int(rnd, 70, 97),
       industries: [input.niche],

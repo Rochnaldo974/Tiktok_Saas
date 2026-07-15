@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
-import { getRealVideos } from '@/lib/providers/tiktok';
+import { getRealVideos, getGlobalRealVideos } from '@/lib/providers/tiktok';
 import { getPrefsState } from '@/lib/prefs';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { Onboarding } from '@/components/onboarding';
@@ -40,9 +40,13 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
      reste visible plus bas, marqué quand il sort de son périmètre.
      Si le provider de données réelles est actif, les vidéos des niches
      suivies sont de VRAIES vidéos TikTok (miniature + lien). */
-  const realVideos = await getRealVideos(followed, country);
+  const [realVideos, globalReal] = await Promise.all([
+    getRealVideos(followed, country),
+    getGlobalRealVideos(country),
+  ]);
   const mockMine = d.videos.filter((v) => inNiches(v.niche));
   const myVideos = realVideos.length ? realVideos : mockMine;
+  const viralVideos = globalReal.length ? globalReal : d.videos;
   const topVideo = myVideos[0] ?? d.videos[0];
   const topSound = d.sounds[0];
   const topHook = d.hooks.find((h) => h.industries.some(inNiches)) ?? d.hooks[0];
@@ -154,8 +158,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             </div>
           </div>
           <div className="video-grid">
-            {d.videos.slice(0, 6).map((v, i) => (
-              <VideoCard key={v.id} video={v} delay={i * 60} outside={!inNiches(v.niche)} />
+            {viralVideos.slice(0, 6).map((v, i) => (
+              <VideoCard key={v.id} video={v} delay={i * 60} outside={!v.real && !inNiches(v.niche)} />
             ))}
           </div>
         </section>
