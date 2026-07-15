@@ -4,7 +4,7 @@ import type { Video } from '@/lib/data';
 import { fmt, dur, ago } from '@/lib/data';
 import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
-import { Up, Play, Eye, Heart, Sparkle, Music } from '@/components/icons';
+import { Up, Play, Eye, Heart, Sparkle, Music, Comment, Share } from '@/components/icons';
 import { openTrendPanel } from '@/components/trend-panel';
 
 export function VideoCard({
@@ -37,7 +37,13 @@ export function VideoCard({
           <span className="circle"><Play /></span>
           <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>Voir sur TikTok</span>
         </div>
-        <div className="thumb-bottom">
+        <div className="tt-rail" aria-hidden="true">
+          <span className="avatar-sm" style={avatarStyle(v.creator.hue)}>{v.creator.initials}</span>
+          <span className="tt-act"><Heart /><span className="num">{fmt(v.likes)}</span></span>
+          <span className="tt-act"><Comment /><span className="num">{fmt(v.comments)}</span></span>
+          <span className="tt-act"><Share /><span className="num">{fmt(v.shares)}</span></span>
+        </div>
+        <div className="thumb-bottom" style={{ right: 52 }}>
           <div className="thumb-title">{v.title}</div>
           <div className="thumb-meta">
             <span>{v.niche}</span><span>·</span><span>{v.country}</span><span>·</span><span>{ago(v.uploadedH)}</span>

@@ -117,3 +117,12 @@ export const Radar = (p: IconProps) => (
 export const Flame = (p: IconProps) => (
   <svg {...base(p)}><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
 );
+export const Comment = (p: IconProps) => (
+  <svg {...base(p)}><path d="M21 11.5a8.38 8.38 0 0 1-8.5 8.5 8.5 8.5 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 8.5-8.5 8.38 8.38 0 0 1 8.5 8.5z" /></svg>
+);
+export const Share = (p: IconProps) => (
+  <svg {...base(p)}><path d="m13 5 8 6-8 6v-4C7 13 4 15 3 19c0-7 4-10 10-10V5z" fill="currentColor" stroke="none" /></svg>
+);
+export const UserIcon = (p: IconProps) => (
+  <svg {...base(p)}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+);

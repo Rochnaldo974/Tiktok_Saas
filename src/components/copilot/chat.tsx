@@ -217,7 +217,7 @@ export function CopilotChat({
         </div>
         {messages.map((m) => (
           <div key={m.id} className={`msg ${m.role}`}>
-            <span className="msg-avatar">{m.role === 'ai' ? <Bolt /> : 'ER'}</span>
+            <span className="msg-avatar">{m.role === 'ai' ? <Bolt /> : 'Moi'}</span>
             <div className="msg-bubble">{typeof m.content === 'string' ? <p>{m.content}</p> : m.content}</div>
           </div>
         ))}

@@ -1,8 +1,9 @@
 'use client';
 
 import { Suspense, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { Search, Globe, Calendar, Chevron, Alerts } from '@/components/icons';
+import { Search, Globe, Calendar, Chevron, Alerts, UserIcon } from '@/components/icons';
 import { toast } from '@/components/toaster';
 import { CommandMenu } from '@/components/command-menu';
 import { COUNTRIES, TIMEFRAMES, resolveCountry, resolveTimeframe, type Timeframe } from '@/lib/data';
@@ -66,15 +67,14 @@ function DropMenu({
   );
 }
 
-function TopbarInner({
-  defaultCountry,
-  defaultTimeframe,
-  followedNiches,
-}: {
+interface TopbarProps {
   defaultCountry: string;
   defaultTimeframe: Timeframe;
   followedNiches: string[];
-}) {
+  userEmail: string | null;
+}
+
+function TopbarInner({ defaultCountry, defaultTimeframe, followedNiches, userEmail }: TopbarProps) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -130,15 +130,24 @@ function TopbarInner({
             setParam('tf', v);
           }}
         />
-        <button
-          className="icon-btn"
-          aria-label="Notifications"
-          onClick={() => toast('3 alertes : 2 sons montants, 1 hook mis à jour')}
-        >
+        <Link className="icon-btn" aria-label="Voir les alertes" href="/alertes">
           <Alerts />
           <span className="dot" />
-        </button>
-        <button className="avatar" aria-label="Profil">ER</button>
+        </Link>
+        {userEmail ? (
+          <Link
+            className="avatar"
+            href="/reglages"
+            aria-label={`Mon compte (${userEmail})`}
+            title={userEmail}
+          >
+            {userEmail.slice(0, 2).toUpperCase()}
+          </Link>
+        ) : (
+          <Link className="btn btn-secondary btn-sm" href="/connexion">
+            <UserIcon /> Se connecter
+          </Link>
+        )}
       </div>
       {cmdkOpen && (
         <CommandMenu
@@ -152,7 +161,7 @@ function TopbarInner({
   );
 }
 
-export function Topbar(props: { defaultCountry: string; defaultTimeframe: Timeframe; followedNiches: string[] }) {
+export function Topbar(props: TopbarProps) {
   return (
     <Suspense fallback={<header className="topbar" />}>
       <TopbarInner {...props} />

@@ -44,7 +44,6 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   const myPeaking = myVideos.filter((v) => v.status === 'Peaking').length;
   const rising = d.sounds.filter((s) => s.rising).length;
   const avgViral = Math.round(d.videos.slice(0, 20).reduce((a, v) => a + v.viralScore, 0) / 20);
-  const pulse = Math.min(99, avgViral + 4);
   const transferable = d.videos.find((v) => !inNiches(v.niche) && v.status !== 'Saturated');
   const q = `?country=${encodeURIComponent(country)}&tf=${encodeURIComponent(timeframe)}`;
 
@@ -53,28 +52,46 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   });
 
   /* Les actions du planning dues aujourd'hui (ou en retard) — le rappel
-     qui fait revenir chaque jour. */
+     qui fait revenir chaque jour — et le score du dernier audit. */
   let planToday: { id: string; label: string }[] = [];
+  let profileScore: number | null = null;
+  let profileHandle: string | null = null;
   if (user) {
     const supabase = await getSupabaseServer();
-    const { data: planData } = await supabase!
-      .from('plan_items')
-      .select('id, label')
-      .eq('done', false)
-      .lte('due_date', new Date().toISOString().slice(0, 10))
-      .order('due_date', { ascending: true })
-      .limit(3);
+    const [{ data: planData }, { data: profileData }] = await Promise.all([
+      supabase!
+        .from('plan_items')
+        .select('id, label')
+        .eq('done', false)
+        .lte('due_date', new Date().toISOString().slice(0, 10))
+        .order('due_date', { ascending: true })
+        .limit(3),
+      supabase!.from('profiles').select('tiktok_handle, tiktok_analysis').eq('id', user.id).single(),
+    ]);
     planToday = planData ?? [];
+    const analysis = profileData?.tiktok_analysis as { score?: number } | null;
+    if (typeof analysis?.score === 'number') {
+      profileScore = analysis.score;
+      profileHandle = profileData?.tiktok_handle ?? null;
+    }
   }
 
   return (
     <div className="page">
       <div className="content">
+        {/* titre : au premier coup d'œil, on sait ce qu'on regarde */}
+        <header style={{ marginBottom: -24 }}>
+          <h1 className="section-title" style={{ fontSize: 28 }}>Votre brief du jour</h1>
+          <p className="section-sub">
+            Ce qui bouge dans vos niches et quoi tourner — recalculé chaque jour pour {followed.join(', ')}.
+          </p>
+        </header>
+
         {/* brief quotidien — personnalisé sur les niches suivies */}
         <section className="hero reveal" aria-labelledby="brief-title">
           <div className="hero-grid">
             <div>
-              <p className="eyebrow">Vos niches : {followed.join(' · ')} — {country} · {timeframe}</p>
+              <p className="eyebrow">{country} · {timeframe}</p>
               <h1 className="hero-title" id="brief-title">
                 {topVideo.niche} bouge pour vous. {myPeaking} format{myPeaking > 1 ? 's' : ''} au pic dans vos niches.
               </h1>
@@ -227,16 +244,34 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             </Link>
           </div>
         )}
-        <div className="card rail-card reveal">
-          <h4><span className="pulse" /> Pouls du marché</h4>
-          <div className="score-hero">
-            <div>
-              <div className="score-num">{pulse}<small>/100</small></div>
-              <div className="score-label">L&apos;activité du marché est <b>élevée</b> — une bonne journée pour publier.</div>
+        {profileScore !== null ? (
+          <div className="card rail-card reveal">
+            <h4><span className="pulse" /> Votre score de profil</h4>
+            <div className="score-hero">
+              <div>
+                <div className="score-num">{profileScore}<small>/100</small></div>
+                <div className="score-label">
+                  Potentiel de croissance{profileHandle ? <> de <b>@{profileHandle}</b></> : null}
+                </div>
+              </div>
+              <Ring value={profileScore} accent />
             </div>
-            <Ring value={pulse} accent />
+            <Link className="btn btn-secondary btn-sm" style={{ marginTop: 14, width: '100%' }} href="/analyse">
+              Revoir mon audit <ArrowRight />
+            </Link>
           </div>
-        </div>
+        ) : (
+          <div className="card rail-card reveal">
+            <h4><span className="pulse" /> Votre score de profil</h4>
+            <p style={{ color: 'var(--muted)', fontSize: 13, lineHeight: 1.55 }}>
+              Collez votre @ TikTok : l&apos;IA calcule votre potentiel de croissance et vous
+              rend un plan d&apos;action sur 7 jours.
+            </p>
+            <Link className="btn btn-primary btn-sm" style={{ marginTop: 14, width: '100%' }} href="/analyse">
+              <Radar /> Analyser mon profil
+            </Link>
+          </div>
+        )}
         <div className="card rail-card reveal" style={{ animationDelay: '80ms' }}>
           <h4>{country} · {timeframe}</h4>
           <div className="rail-row">
@@ -266,20 +301,23 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
         </div>
         {transferable && (
           <div className="card rail-card reveal" style={{ animationDelay: '120ms' }}>
-            <h4><Wand style={{ width: 13, height: 13 }} /> Format transférable</h4>
+            <h4><Wand style={{ width: 13, height: 13 }} /> Idée à voler à une autre niche</h4>
+            <p style={{ color: 'var(--faint)', fontSize: 12, lineHeight: 1.5, marginBottom: 10 }}>
+              Ce format cartonne ailleurs — reprenez sa mécanique dans votre niche avant les autres.
+            </p>
             <p style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 15.5, letterSpacing: '-0.01em', lineHeight: 1.35 }}>
               « {transferable.title} »
             </p>
             <p style={{ color: 'var(--muted)', fontSize: 13, marginTop: 8 }}>
-              Explose en {transferable.niche} (+{transferable.growth} %) — hors de vos niches,
-              mais la structure se transpose : {transferable.summary.toLowerCase()}
+              +{transferable.growth} % en {transferable.niche}. Pourquoi ça marche :{' '}
+              {transferable.summary.charAt(0).toLowerCase() + transferable.summary.slice(1)}
             </p>
             <Link
               className="btn btn-secondary btn-sm"
               style={{ marginTop: 14, width: '100%' }}
               href={`/copilote${q}`}
             >
-              Adapter à ma niche avec le copilote
+              L&apos;adapter à ma niche avec le copilote
             </Link>
           </div>
         )}

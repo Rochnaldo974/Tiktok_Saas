@@ -226,6 +226,24 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       7 actions datées en base → page Planning → cochage (1/7) → carte
       dashboard ; base laissée vierge pour le test utilisateur
 
+### 2026-07-15 — Retours de test n°2 : état de connexion, clarté, miniatures
+- [x] **Fix bug** : l'avatar « ER » du topbar était codé en dur (on semblait
+      connecté même déconnecté) — remplacé par l'état réel : initiales de
+      l'email → lien Réglages si connecté, bouton « Se connecter » sinon ;
+      la cloche pointe vers /alertes ; avatar copilote « Moi »
+- [x] **Titre du dashboard** : « Votre brief du jour » + sous-titre explicite
+      (« Ce qui bouge dans vos niches et quoi tourner — recalculé chaque jour »)
+- [x] **Score de profil à la place du « Pouls du marché »** (99/100 inutile :
+      sur TikTok on poste tous les jours) : la carte du rail affiche le score
+      du dernier audit (+ lien « Revoir mon audit »), ou un CTA « Analyser
+      mon profil » si pas d'audit — meilleur funnel vers la page Analyse
+- [x] **« Format transférable » → « Idée à voler à une autre niche »** avec
+      une ligne d'explication du concept
+- [x] **Miniatures façon TikTok** : barre d'actions latérale (avatar du
+      créateur, cœur/commentaires/partages avec les vrais compteurs de la
+      carte) — les vignettes ne font plus vides et évoquent de vraies
+      captures ; en attendant les vraies miniatures (données réelles P2)
+
 ---
 
 ## 🔜 Immédiat
