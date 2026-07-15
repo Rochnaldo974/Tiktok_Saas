@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { fmt } from '@/lib/data';
+import Link from 'next/link';
 import { readPrefs, writePrefs } from '@/lib/prefs-client';
 import { MAX_NICHES } from '@/lib/prefs-shared';
+import { addPlanToPlanning } from '@/lib/planning';
 import type { ProfileAnalysisResponse } from '@/lib/profile-analysis';
 import { Ring } from '@/components/cards/ring';
-import { Radar, Sparkle, Check, X, Copy, Wand } from '@/components/icons';
+import { Radar, Sparkle, Check, X, Copy, Wand, Calendar, ArrowRight } from '@/components/icons';
 import { toast } from '@/components/toaster';
 
 /* Audit stratégique complet d'un profil TikTok : score, positionnement,
@@ -27,6 +29,8 @@ export function DeepAnalyzer({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<ProfileAnalysisResponse | null>(initialResult);
+  const [planAdded, setPlanAdded] = useState(false);
+  const [planBusy, setPlanBusy] = useState(false);
 
   async function analyze() {
     if (busy) return;
@@ -173,6 +177,29 @@ export function DeepAnalyzer({
                     <span>{step}</span>
                   </div>
                 ))}
+              </div>
+              <div style={{ display: 'flex', gap: 10, marginTop: 20, flexWrap: 'wrap', alignItems: 'center' }}>
+                {planAdded ? (
+                  <Link className="btn btn-primary" href="/planning">
+                    <Calendar /> Voir mon planning <ArrowRight />
+                  </Link>
+                ) : (
+                  <button
+                    className="btn btn-primary"
+                    disabled={planBusy}
+                    onClick={async () => {
+                      setPlanBusy(true);
+                      const ok = await addPlanToPlanning(a.plan!);
+                      setPlanBusy(false);
+                      if (ok) setPlanAdded(true);
+                    }}
+                  >
+                    <Calendar /> {planBusy ? 'Ajout...' : 'Ajouter à mon planning'}
+                  </button>
+                )}
+                <span style={{ color: 'var(--faint)', fontSize: 12.5 }}>
+                  Une action par jour, à partir d&apos;aujourd&apos;hui — cochable depuis la page Planning.
+                </span>
               </div>
             </div>
           ) : null}

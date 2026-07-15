@@ -11,7 +11,15 @@ import { openTrendPanel } from '@/components/trend-panel';
 export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number }) {
   return (
     <article className="card idea-card reveal" style={{ animationDelay: `${delay}ms` }}>
-      <div className="thumb">
+      <a
+        className="thumb"
+        href={`https://www.tiktok.com/search?q=${encodeURIComponent(v.title)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Voir les vidéos de ce sujet sur TikTok"
+        aria-label={`Voir les vidéos « ${v.title} » sur TikTok`}
+        style={{ display: 'block', cursor: 'pointer' }}
+      >
         <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
         <div className="thumb-top">
           <span className="badge green"><Up /> +{v.growth} %</span>
@@ -19,13 +27,14 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
         </div>
         <div className="play-hint">
           <span className="circle"><Play /></span>
+          <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>Voir sur TikTok</span>
         </div>
         <div className="thumb-bottom">
           <div className="thumb-meta">
             <span>{v.niche}</span><span>·</span><span>{ago(v.uploadedH)}</span>
           </div>
         </div>
-      </div>
+      </a>
 
       <div className="idea-body">
         <div className="idea-head">

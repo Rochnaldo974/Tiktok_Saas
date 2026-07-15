@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
 import { getPrefsState } from '@/lib/prefs';
+import { getSupabaseServer } from '@/lib/supabase/server';
 import { Onboarding } from '@/components/onboarding';
 import { DailyPlan } from '@/components/daily-plan';
 import { VideoCard } from '@/components/cards/video-card';
@@ -9,7 +10,7 @@ import { HookCard } from '@/components/cards/hook-card';
 import { CreatorCard } from '@/components/cards/creator-card';
 import { TagCard } from '@/components/cards/tag-card';
 import { Ring } from '@/components/cards/ring';
-import { ArrowRight, Radar, Flame, Music, Quote, Film, Clock, Wand } from '@/components/icons';
+import { ArrowRight, Radar, Flame, Music, Quote, Film, Clock, Wand, Calendar } from '@/components/icons';
 
 type Search = Promise<{ country?: string; tf?: string }>;
 
@@ -17,7 +18,7 @@ export const metadata = { title: "Aujourd'hui" };
 
 export default async function TodayPage({ searchParams }: { searchParams: Search }) {
   const params = await searchParams;
-  const { prefs, configured } = await getPrefsState();
+  const { prefs, configured, user } = await getPrefsState();
 
   /* Première visite : on demande les niches avant de montrer quoi que ce soit. */
   if (!configured) {
@@ -50,6 +51,21 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   const today = new Date().toLocaleDateString('fr-FR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
+
+  /* Les actions du planning dues aujourd'hui (ou en retard) — le rappel
+     qui fait revenir chaque jour. */
+  let planToday: { id: string; label: string }[] = [];
+  if (user) {
+    const supabase = await getSupabaseServer();
+    const { data: planData } = await supabase!
+      .from('plan_items')
+      .select('id, label')
+      .eq('done', false)
+      .lte('due_date', new Date().toISOString().slice(0, 10))
+      .order('due_date', { ascending: true })
+      .limit(3);
+    planToday = planData ?? [];
+  }
 
   return (
     <div className="page">
@@ -198,6 +214,19 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
 
       {/* rail droit */}
       <aside className="rail">
+        {planToday.length > 0 && (
+          <div className="card rail-card reveal" style={{ borderColor: 'rgba(254,44,85,0.35)' }}>
+            <h4 style={{ color: 'var(--accent)' }}><Calendar style={{ width: 13, height: 13 }} /> Votre planning aujourd&apos;hui</h4>
+            {planToday.map((item) => (
+              <div key={item.id} className="rail-row" style={{ fontSize: 13 }}>
+                <span style={{ color: 'var(--text)', lineHeight: 1.45 }}>{item.label}</span>
+              </div>
+            ))}
+            <Link className="btn btn-secondary btn-sm" style={{ marginTop: 12, width: '100%' }} href="/planning">
+              Ouvrir le planning <ArrowRight />
+            </Link>
+          </div>
+        )}
         <div className="card rail-card reveal">
           <h4><span className="pulse" /> Pouls du marché</h4>
           <div className="score-hero">

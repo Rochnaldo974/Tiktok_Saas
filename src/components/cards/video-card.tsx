@@ -19,7 +19,15 @@ export function VideoCard({
 }) {
   return (
     <article className="card video-card reveal" style={{ animationDelay: `${delay}ms` }}>
-      <div className="thumb">
+      <a
+        className="thumb"
+        href={`https://www.tiktok.com/search?q=${encodeURIComponent(v.title)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Voir les vidéos de ce sujet sur TikTok"
+        aria-label={`Voir les vidéos « ${v.title} » sur TikTok`}
+        style={{ display: 'block', cursor: 'pointer' }}
+      >
         <ThumbBg hue={v.hue} angle={v.angle} id={v.id} />
         <div className="thumb-top">
           <span className="badge green"><Up /> +{v.growth} %</span>
@@ -27,6 +35,7 @@ export function VideoCard({
         </div>
         <div className="play-hint">
           <span className="circle"><Play /></span>
+          <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>Voir sur TikTok</span>
         </div>
         <div className="thumb-bottom">
           <div className="thumb-title">{v.title}</div>
@@ -34,7 +43,7 @@ export function VideoCard({
             <span>{v.niche}</span><span>·</span><span>{v.country}</span><span>·</span><span>{ago(v.uploadedH)}</span>
           </div>
         </div>
-      </div>
+      </a>
       <div className="video-body">
         <div className="creator-line">
           <span className="avatar-sm" style={{ width: 26, height: 26, fontSize: 9, ...avatarStyle(v.creator.hue) }}>

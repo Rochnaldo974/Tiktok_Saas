@@ -178,6 +178,14 @@ export function TrendPanel() {
               <span className="k"><Quote /> Hook d&apos;ouverture</span>
               <span className="v" style={{ maxWidth: 280 }}>« {v.hook.text} »<small>{v.hook.performance} % de rétention</small></span>
             </div>
+            <a
+              className="section-link"
+              href={`https://www.tiktok.com/search?q=${encodeURIComponent(v.title)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Voir les vidéos de ce sujet sur TikTok <Up />
+            </a>
           </div>
         ) : (
           <div className="panel-body" ref={scriptRef}>

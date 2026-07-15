@@ -212,6 +212,20 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       les vrais chiffres (ratio likes/vidéos, fréquence), plan J1-J7
       actionnable, idées personnalisées pertinentes
 
+### 2026-07-15 — Planning persistant + prévisualisation TikTok (retours utilisateur)
+- [x] **Planning** : table `plan_items` (RLS complète), bouton « Ajouter à
+      mon planning » sous le plan d'audit (1 action/jour à partir
+      d'aujourd'hui), page **/planning** (checklist groupée par jour,
+      « Aujourd'hui » en avant, progression x/7, retard signalé,
+      cocher/supprimer), carte « Votre planning aujourd'hui » sur le
+      dashboard (actions dues non faites) — la boucle de rétention du produit
+- [x] **Prévisualisation** : miniatures des cartes vidéo/idée et lien du
+      panneau → **recherche TikTok réelle du sujet** (nouvel onglet) ;
+      deviendra le lien direct de la vidéo quand les vraies données arriveront
+- [x] Testé de bout en bout (compte jetable, supprimé après) : audit →
+      7 actions datées en base → page Planning → cochage (1/7) → carte
+      dashboard ; base laissée vierge pour le test utilisateur
+
 ---
 
 ## 🔜 Immédiat
