@@ -165,6 +165,32 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       la session peut tomber → l'UI affiche « Connectez-vous » proprement ;
       backlog : rediriger vers /connexion dans ce cas
 
+### 2026-07-15 — Niches libres + analyse de profil TikTok (audit « point de vue client »)
+- [x] **Niches 100 % libres** : la danseuse, le potier, le barbier ont leur
+      place — champ « Autre niche » dans l'onboarding et les Réglages,
+      validation stricte (`sanitizeNiche`, 2–30 caractères, max 8 niches)
+- [x] **Moteur étendu aux niches personnalisées** : `dataset(country, tf,
+      extraNiches)` génère vidéos, créateurs, hooks et hashtags pour toute
+      niche saisie (templates FR seedés sur le nom) ; propagé partout
+      (Today, Idées, filtres, copilote, ⌘K, alertes, badge)
+- [x] **Analyse de profil TikTok réelle** (`/api/profil`) : lecture du profil
+      public (bio, abonnés, vidéos, likes — **vraies données**) + analyse
+      Claude (niches détectées, résumé, conseils actionnables) ; rate limit
+      10/h/IP (accessible sans compte = accroche d'acquisition) ; fallback
+      « décrivez votre contenu » si profil inaccessible ; stockée dans
+      `profiles.tiktok_handle/tiktok_analysis` quand connecté (migration)
+- [x] **Onboarding repensé** : chemin magique « colle ton @ » en premier
+      (stats réelles + niches auto-sélectionnées), choix manuel + niche
+      libre ensuite
+- [x] Réglages : carte « Profil TikTok » (analyse + re-analyse), niche libre
+- [x] tsconfig `target` ES2017 → ES2022
+- [x] **Testé en réel** (parcours danseuse) : @leaelui → 18 M abonnés lus,
+      niches « Danse, Lifestyle, Beauté » détectées et appliquées, dashboard
+      et flux Idées personnalisés sur la Danse avec contenu généré
+- [x] Données réelles — état honnête : le **profil** est en vraies données ;
+      les **tendances** restent simulées (l'API Creative Center exige une
+      signature) → voir backlog P2
+
 ---
 
 ## 🔜 Immédiat
@@ -196,8 +222,12 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Sauvegarde réelle dans `saved_items` + page Bibliothèque — fait le 2026-07-15
 - [ ] Emails d'auth : personnaliser les templates Supabase (FR) et brancher
       un SMTP custom avant la prod (limite stricte du SMTP par défaut)
-- [ ] **Ingestion de vraies données TikTok** remplaçant le mock `dataset()`
-      de `src/lib/data.ts` (l'interface typée `Dataset` est le contrat à garder)
+- [ ] **Ingestion de vraies tendances TikTok** remplaçant le mock `dataset()`
+      (l'interface typée `Dataset` est le contrat à garder). Sondé le
+      2026-07-15 : Creative Center = signature requise ; le profil public
+      est lisible (déjà exploité par /api/profil). Options : provider payant
+      (Apify / EnsembleData / ScrapTik) branché derrière `dataset()` avec
+      cache + fallback mock — nécessite une clé et un budget à valider
 
 ### P3 — Industrialisation
 - [x] Génération IA des scripts (API Claude, `claude-opus-4-8`) — fait le
@@ -231,3 +261,5 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Le dashboard est centré sur les niches suivies ; le viral global est secondaire (badge « Hors de vos niches », carte « Format transférable ») | Feedback utilisateur : un créateur veut d'abord SA niche ; le hors-niche n'a de valeur que si le format est transposable |
 | 2026-07-15 | Onboarding bloquant à la première visite (choix des niches) | Sans cette donnée, aucune personnalisation n'est honnête ; à terme : déduction via le @handle TikTok |
 | 2026-07-15 | Toute recommandation doit finir en action 1-clic (script, sauvegarde, copie) — zéro bouton mort | Audit produit : la promesse client est « ouvre l'app, repars avec un script », pas « lis un dashboard » |
+| 2026-07-15 | Taxonomie de niches ouverte (champ libre + moteur par templates seedés) au lieu des 10 niches codées en dur | Audit client : la danseuse, le potier n'avaient aucune case — la valeur du produit est dans la micro-niche |
+| 2026-07-15 | Analyse de profil accessible sans compte, rate-limitée par IP | C'est l'accroche d'acquisition (« audit gratuit de ton compte ») ; le coût IA est contenu par le rate limit |

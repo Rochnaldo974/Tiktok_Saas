@@ -18,7 +18,7 @@ export interface AlertItem {
 }
 
 export function buildAlerts(country: string, timeframe: string, niches: string[]): AlertItem[] {
-  const d = dataset(country, timeframe);
+  const d = dataset(country, timeframe, niches);
   const alerts: AlertItem[] = [];
 
   for (const niche of niches) {

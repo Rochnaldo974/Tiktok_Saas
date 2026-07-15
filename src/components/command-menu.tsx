@@ -18,10 +18,12 @@ interface Item {
 export function CommandMenu({
   country,
   timeframe,
+  followedNiches = [],
   onClose,
 }: {
   country: string;
   timeframe: string;
+  followedNiches?: string[];
   onClose: () => void;
 }) {
   const router = useRouter();
@@ -40,7 +42,7 @@ export function CommandMenu({
   const groups = useMemo((): [string, Item[]][] => {
     const query = q.trim().toLowerCase();
     if (!query) return [];
-    const d = dataset(country, timeframe);
+    const d = dataset(country, timeframe, followedNiches);
     const match = (s: string) => s.toLowerCase().includes(query);
     const goIdeas = (niche: string) => {
       router.push('/idees?country=' + encodeURIComponent(country) + '&tf=' + encodeURIComponent(timeframe) + '&q=' + encodeURIComponent(niche));
@@ -70,7 +72,7 @@ export function CommandMenu({
         }))],
       ] as [string, Item[]][]
     ).filter(([, items]) => items.length);
-  }, [q, country, timeframe, router, onClose]);
+  }, [q, country, timeframe, followedNiches, router, onClose]);
 
   return (
     <div className="cmdk" role="dialog" aria-modal="true" aria-label="Recherche globale"

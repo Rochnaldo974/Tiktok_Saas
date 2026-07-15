@@ -69,9 +69,11 @@ function DropMenu({
 function TopbarInner({
   defaultCountry,
   defaultTimeframe,
+  followedNiches,
 }: {
   defaultCountry: string;
   defaultTimeframe: Timeframe;
+  followedNiches: string[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -139,13 +141,18 @@ function TopbarInner({
         <button className="avatar" aria-label="Profil">ER</button>
       </div>
       {cmdkOpen && (
-        <CommandMenu country={country} timeframe={timeframe} onClose={() => setCmdkOpen(false)} />
+        <CommandMenu
+          country={country}
+          timeframe={timeframe}
+          followedNiches={followedNiches}
+          onClose={() => setCmdkOpen(false)}
+        />
       )}
     </header>
   );
 }
 
-export function Topbar(props: { defaultCountry: string; defaultTimeframe: Timeframe }) {
+export function Topbar(props: { defaultCountry: string; defaultTimeframe: Timeframe; followedNiches: string[] }) {
   return (
     <Suspense fallback={<header className="topbar" />}>
       <TopbarInner {...props} />

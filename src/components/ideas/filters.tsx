@@ -7,7 +7,7 @@ import { NICHES, TREND_STATUS, STATUS_LABELS } from '@/lib/data';
 
 const SUGGESTIONS = ['Finance', 'Cuisine', 'Beauté', 'Gaming', 'Marketing'];
 
-export function IdeasFilters() {
+export function IdeasFilters({ followedNiches = [] }: { followedNiches?: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -70,13 +70,13 @@ export function IdeasFilters() {
         <button className={`pill${!niche ? ' on' : ''}`} onClick={() => apply({ niche: '' })}>
           Toutes les niches
         </button>
-        {NICHES.map((n) => (
+        {[...new Set([...followedNiches, ...NICHES.map((n) => n.name)])].map((name) => (
           <button
-            key={n.name}
-            className={`pill${niche === n.name ? ' on' : ''}`}
-            onClick={() => apply({ niche: niche === n.name ? '' : n.name })}
+            key={name}
+            className={`pill${niche === name ? ' on' : ''}`}
+            onClick={() => apply({ niche: niche === name ? '' : name })}
           >
-            {n.name}
+            {name}
           </button>
         ))}
         <span className="sep" aria-hidden="true" />

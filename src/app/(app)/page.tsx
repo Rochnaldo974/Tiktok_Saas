@@ -30,7 +30,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
 
   const country = params.country ? resolveCountry(params.country) : prefs.country;
   const timeframe = params.tf ? resolveTimeframe(params.tf) : prefs.tf;
-  const d = dataset(country, timeframe);
+  const d = dataset(country, timeframe, prefs.niches);
   const followed = prefs.niches;
   const inNiches = (niche: string) => followed.includes(niche);
 

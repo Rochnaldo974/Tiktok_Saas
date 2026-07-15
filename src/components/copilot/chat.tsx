@@ -146,9 +146,12 @@ function fallback(d: Dataset, country: string) {
   );
 }
 
-function answer(text: string, country: string, timeframe: string, q: string): React.ReactNode {
-  const d = dataset(country, timeframe);
+function answer(text: string, country: string, timeframe: string, q: string, followedNiches: string[]): React.ReactNode {
+  const d = dataset(country, timeframe, followedNiches);
   const t = text.toLowerCase();
+  // Les niches suivies (y compris personnalisées) d'abord, puis les intégrées.
+  const followed = followedNiches.find((n) => t.includes(n.toLowerCase()));
+  if (followed) return nicheBrief(d, followed, country, q);
   const niche = NICHES.find((n) => t.includes(n.name.toLowerCase()));
   if (niche) return nicheBrief(d, niche.name, country, q);
   if (/\bson(s)?\b|musique|audio/.test(t)) return soundsBrief(d);
@@ -158,7 +161,15 @@ function answer(text: string, country: string, timeframe: string, q: string): Re
   return fallback(d, country);
 }
 
-export function CopilotChat({ country, timeframe }: { country: string; timeframe: string }) {
+export function CopilotChat({
+  country,
+  timeframe,
+  followedNiches = [],
+}: {
+  country: string;
+  timeframe: string;
+  followedNiches?: string[];
+}) {
   const q = `country=${encodeURIComponent(country)}&tf=${encodeURIComponent(timeframe)}`;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -179,7 +190,7 @@ export function CopilotChat({ country, timeframe }: { country: string; timeframe
     setTimeout(() => {
       setMessages((prev) => [
         ...prev,
-        { id: idRef.current++, role: 'ai', content: answer(clean, country, timeframe, q) },
+        { id: idRef.current++, role: 'ai', content: answer(clean, country, timeframe, q, followedNiches) },
       ]);
       setThinking(false);
     }, 700);

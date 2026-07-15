@@ -23,7 +23,7 @@ export default async function CopilotPage({ searchParams }: { searchParams: Sear
             une analyse de niche, un son à prendre ou un hook à améliorer.
           </p>
         </header>
-        <CopilotChat country={country} timeframe={timeframe} />
+        <CopilotChat country={country} timeframe={timeframe} followedNiches={prefs.niches} />
         <p style={{ color: 'var(--faint)', fontSize: 12.5 }}>
           Réponses de démonstration générées localement à partir des données de tendances —
           la connexion à l&apos;API Claude est prévue dans la feuille de route.

@@ -1,10 +1,25 @@
 import { getPrefsState } from '@/lib/prefs';
+import { getSupabaseServer } from '@/lib/supabase/server';
 import { SettingsForm } from '@/components/settings/form';
+import type { ProfileAnalysis } from '@/lib/profile-analysis';
 
 export const metadata = { title: 'Réglages' };
 
 export default async function SettingsPage() {
   const { prefs, user } = await getPrefsState();
+
+  let tiktokHandle: string | null = null;
+  let tiktokAnalysis: ProfileAnalysis | null = null;
+  if (user) {
+    const supabase = await getSupabaseServer();
+    const { data } = await supabase!
+      .from('profiles')
+      .select('tiktok_handle, tiktok_analysis')
+      .eq('id', user.id)
+      .single();
+    tiktokHandle = data?.tiktok_handle ?? null;
+    tiktokAnalysis = (data?.tiktok_analysis as ProfileAnalysis | null) ?? null;
+  }
 
   return (
     <div className="page" style={{ gridTemplateColumns: '1fr' }}>
@@ -17,7 +32,12 @@ export default async function SettingsPage() {
             par défaut, et les niches qui alimentent vos alertes.
           </p>
         </header>
-        <SettingsForm initial={prefs} userEmail={user?.email ?? null} />
+        <SettingsForm
+          initial={prefs}
+          userEmail={user?.email ?? null}
+          tiktokHandle={tiktokHandle}
+          tiktokAnalysis={tiktokAnalysis}
+        />
       </div>
     </div>
   );

@@ -13,7 +13,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         followedNiches={prefs.niches}
       />
       <div className="main">
-        <Topbar defaultCountry={prefs.country} defaultTimeframe={prefs.tf} />
+        <Topbar
+          defaultCountry={prefs.country}
+          defaultTimeframe={prefs.tf}
+          followedNiches={prefs.niches}
+        />
         {children}
       </div>
       <TrendPanel />

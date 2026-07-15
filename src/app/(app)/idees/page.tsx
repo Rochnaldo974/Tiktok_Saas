@@ -25,7 +25,7 @@ export default async function IdeasPage({ searchParams }: { searchParams: Search
   const niche = params.niche ?? '';
   const status = params.status ?? '';
 
-  const d = dataset(country, timeframe);
+  const d = dataset(country, timeframe, prefs.niches);
   const ideas = d.videos
     .filter((v) => {
       if (niche && v.niche !== niche) return false;
@@ -51,7 +51,7 @@ export default async function IdeasPage({ searchParams }: { searchParams: Search
             avec le hook, le son et le plan de production pour faire votre version.
           </p>
           <Suspense fallback={null}>
-            <IdeasFilters />
+            <IdeasFilters followedNiches={prefs.niches} />
           </Suspense>
         </header>
 

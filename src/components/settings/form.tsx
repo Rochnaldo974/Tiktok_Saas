@@ -5,22 +5,45 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { COUNTRIES, TIMEFRAMES, NICHES, type Timeframe } from '@/lib/data';
 import { writePrefs } from '@/lib/prefs-client';
-import type { Prefs } from '@/lib/prefs-shared';
+import { sanitizeNiche, MAX_NICHES, type Prefs } from '@/lib/prefs-shared';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import { ProfileAnalyzer } from '@/components/profile-analyzer';
+import type { ProfileAnalysis } from '@/lib/profile-analysis';
 import { Chevron } from '@/components/icons';
 import { toast } from '@/components/toaster';
 
-export function SettingsForm({ initial, userEmail }: { initial: Prefs; userEmail: string | null }) {
+export function SettingsForm({
+  initial,
+  userEmail,
+  tiktokHandle,
+  tiktokAnalysis,
+}: {
+  initial: Prefs;
+  userEmail: string | null;
+  tiktokHandle?: string | null;
+  tiktokAnalysis?: ProfileAnalysis | null;
+}) {
   const router = useRouter();
   const [country, setCountry] = useState(initial.country);
   const [tf, setTf] = useState<Timeframe>(initial.tf);
   const [niches, setNiches] = useState<string[]>(initial.niches);
+  const [customInput, setCustomInput] = useState('');
   const [busy, setBusy] = useState(false);
 
   function toggleNiche(name: string) {
     setNiches((prev) =>
-      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name],
+      prev.includes(name) ? prev.filter((n) => n !== name) : [...prev, name].slice(0, MAX_NICHES),
     );
+  }
+
+  function addCustom() {
+    const clean = sanitizeNiche(customInput);
+    if (!clean) {
+      toast('Nom de niche invalide — 2 à 30 caractères, lettres et chiffres');
+      return;
+    }
+    if (!niches.includes(clean)) setNiches((prev) => [...prev, clean].slice(0, MAX_NICHES));
+    setCustomInput('');
   }
 
   async function save() {
@@ -96,8 +119,14 @@ export function SettingsForm({ initial, userEmail }: { initial: Prefs; userEmail
         <h4>Niches suivies</h4>
         <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>
           Elles alimentent votre brief quotidien, la page Alertes et les recommandations du copilote.
+          Toutes les niches sont possibles — ajoutez la vôtre.
         </p>
         <div className="chip-row">
+          {niches.filter((n) => !NICHES.some((x) => x.name === n)).map((name) => (
+            <button key={name} className="pill on" aria-pressed onClick={() => toggleNiche(name)}>
+              {name} ✕
+            </button>
+          ))}
           {NICHES.map((n) => (
             <button
               key={n.name}
@@ -109,6 +138,36 @@ export function SettingsForm({ initial, userEmail }: { initial: Prefs; userEmail
             </button>
           ))}
         </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 14, maxWidth: 420 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <input
+              aria-label="Autre niche"
+              value={customInput}
+              onChange={(e) => setCustomInput(e.target.value)}
+              placeholder="Autre niche : danse, coiffure, magie..."
+              onKeyDown={(e) => { if (e.key === 'Enter') addCustom(); }}
+            />
+          </div>
+          <button className="btn btn-secondary" onClick={addCustom} style={{ flex: 'none' }}>
+            Ajouter
+          </button>
+        </div>
+      </div>
+
+      <div className="card rail-card reveal" style={{ padding: 24, animationDelay: '90ms' }}>
+        <h4>Profil TikTok</h4>
+        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>
+          L&apos;IA lit votre profil public, détecte vos niches et vous conseille.
+          {userEmail ? " L'analyse est mémorisée dans votre compte." : ''}
+        </p>
+        <ProfileAnalyzer
+          initialHandle={tiktokHandle ?? ''}
+          initialAnalysis={tiktokAnalysis ?? null}
+          onAnalysis={(r) => {
+            setNiches((prev) => [...new Set([...r.analysis.niches, ...prev])].slice(0, MAX_NICHES));
+            toast('Niches détectées ajoutées — pensez à enregistrer');
+          }}
+        />
       </div>
 
       <div className="card rail-card reveal" style={{ padding: 24, animationDelay: '120ms' }}>

@@ -177,6 +177,33 @@ export const NICHES: Niche[] = [
   { name: 'Éducation',  hue: 220, topics: ['la méthode de travail des meilleurs étudiants', 'apprendre une langue en 20 min par jour', 'les systèmes de prise de notes comparés', 'les astuces mémoire qui survivent aux examens', 'pourquoi relire ne sert à rien', "les outils IA pour réviser honnêtement", "la courbe de l'oubli expliquée", 'se concentrer sans volonté'] },
 ];
 
+/* Niches personnalisées : n'importe quel métier saisi par l'utilisateur
+   (danse, poterie, coiffure...) obtient son contenu, généré par templates
+   français seedés sur le nom de la niche. */
+const CUSTOM_TOPICS = [
+  "l'erreur que tout le monde fait en {n}",
+  "3 choses à savoir avant de se lancer en {n}",
+  '{n} : la technique que personne ne montre',
+  'une journée dans ma vie de créateur {n}',
+  'le matériel minimal pour débuter en {n}',
+  "ce qu'un an de {n} m'a appris",
+  'les 5 bases de {n} en 30 secondes',
+  "j'ai testé la tendance {n} du moment",
+];
+
+export function isBuiltInNiche(name: string): boolean {
+  return NICHES.some((n) => n.name === name);
+}
+
+export function customNiche(name: string): Niche {
+  const lower = name.charAt(0).toLowerCase() + name.slice(1);
+  return {
+    name,
+    hue: hashStr(name) % 360,
+    topics: CUSTOM_TOPICS.map((t) => t.replace('{n}', lower)),
+  };
+}
+
 const FIRST = ['lea', 'max', 'nora', 'theo', 'emma', 'lucas', 'jade', 'hugo', 'lina', 'noah', 'mila', 'adam', 'zoe', 'liam', 'ines', 'sacha', 'anna', 'elio', 'maya', 'nino'];
 const SUFFIX = ['talks', 'daily', 'studio', 'notes', 'lab', 'files', 'club', 'works', 'diary', 'method', 'space', 'radar', 'signal', 'sense', 'mode', 'craft', 'scope', 'loop', 'shift', 'frame'];
 
@@ -300,11 +327,11 @@ function int(rnd: Rnd, min: number, max: number): number {
   return Math.floor(rnd() * (max - min + 1)) + min;
 }
 
-function buildCreators(rnd: Rnd, country: string, n: number): Creator[] {
+function buildCreators(rnd: Rnd, country: string, n: number, niches: Niche[]): Creator[] {
   const used = new Set<string>();
   const out: Creator[] = [];
   for (let i = 0; i < n; i++) {
-    const niche = NICHES[i % NICHES.length];
+    const niche = niches[i % niches.length];
     let handle: string;
     do {
       handle = '@' + pick(rnd, FIRST) + '.' + pick(rnd, SUFFIX);
@@ -348,12 +375,12 @@ function buildSounds(rnd: Rnd, n: number): Sound[] {
   return out.sort((a, b) => b.growth - a.growth);
 }
 
-function buildHooks(rnd: Rnd, n: number): Hook[] {
+function buildHooks(rnd: Rnd, n: number, allNiches: Niche[]): Hook[] {
   const out: Hook[] = [];
   for (let i = 0; i < n; i++) {
     const t = HOOK_TEMPLATES[i % HOOK_TEMPLATES.length];
     const topic = HOOK_TOPICS[(i * 7 + int(rnd, 0, 3)) % HOOK_TOPICS.length];
-    const niches = [pick(rnd, NICHES).name, pick(rnd, NICHES).name].filter((v, ix, a) => a.indexOf(v) === ix);
+    const niches = [pick(rnd, allNiches).name, pick(rnd, allNiches).name].filter((v, ix, a) => a.indexOf(v) === ix);
     out.push({
       id: 'h' + i,
       text: t.text.replace('{topic}', topic),
@@ -367,7 +394,7 @@ function buildHooks(rnd: Rnd, n: number): Hook[] {
   return out.sort((a, b) => b.performance - a.performance);
 }
 
-function buildHashtags(rnd: Rnd, n: number): Hashtag[] {
+function buildHashtags(rnd: Rnd, n: number, allNiches: Niche[], customs: string[]): Hashtag[] {
   const out: Hashtag[] = [];
   for (let i = 0; i < n; i++) {
     const tag = HASHTAG_BASE[i % HASHTAG_BASE.length] + (i >= HASHTAG_BASE.length ? String(i % 9) : '');
@@ -376,16 +403,29 @@ function buildHashtags(rnd: Rnd, n: number): Hashtag[] {
       tag: '#' + tag,
       growth: int(rnd, -20, 420),
       videos: int(rnd, 2, 480) * 1000,
-      niche: pick(rnd, NICHES).name,
+      niche: pick(rnd, allNiches).name,
     });
   }
+  // Un hashtag dédié par niche personnalisée, pour que « sa » niche
+  // apparaisse aussi dans la distribution.
+  customs.forEach((name, i) => {
+    const slug = name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]/g, '');
+    if (!slug) return;
+    out.push({
+      id: 'tc' + i,
+      tag: '#' + slug,
+      growth: int(rnd, 30, 420),
+      videos: int(rnd, 2, 220) * 1000,
+      niche: name,
+    });
+  });
   return out.sort((a, b) => b.growth - a.growth);
 }
 
-function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sound[], hooks: Hook[], n: number): Video[] {
+function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sound[], hooks: Hook[], n: number, niches: Niche[]): Video[] {
   const out: Video[] = [];
   for (let i = 0; i < n; i++) {
-    const niche = NICHES[(i + int(rnd, 0, 2)) % NICHES.length];
+    const niche = niches[(i + int(rnd, 0, 2)) % niches.length];
     const nicheCreators = creators.filter((c) => c.niche === niche.name);
     const creator = nicheCreators.length ? pick(rnd, nicheCreators) : pick(rnd, creators);
     const sound = pick(rnd, sounds);
@@ -440,16 +480,18 @@ function buildVideos(rnd: Rnd, country: string, creators: Creator[], sounds: Sou
 /* ---------- dataset (mémoïsé par état) ---------- */
 const cache = new Map<string, Dataset>();
 
-export function dataset(countryName: string, timeframe: string): Dataset {
-  const key = countryName + '|' + timeframe;
+export function dataset(countryName: string, timeframe: string, extraNiches: string[] = []): Dataset {
+  const customs = [...new Set(extraNiches.filter((n) => n && !isBuiltInNiche(n)))].sort();
+  const key = countryName + '|' + timeframe + '|' + customs.join('~');
   const hit = cache.get(key);
   if (hit) return hit;
+  const allNiches = [...NICHES, ...customs.map(customNiche)];
   const rnd = mulberry32(hashStr(key));
-  const creators = buildCreators(rnd, countryName, 80);
+  const creators = buildCreators(rnd, countryName, 80 + customs.length * 6, allNiches);
   const sounds = buildSounds(rnd, 60);
-  const hooks = buildHooks(rnd, 100);
-  const hashtags = buildHashtags(rnd, 80);
-  const videos = buildVideos(rnd, countryName, creators, sounds, hooks, 120);
+  const hooks = buildHooks(rnd, 100, allNiches);
+  const hashtags = buildHashtags(rnd, 80, allNiches, customs);
+  const videos = buildVideos(rnd, countryName, creators, sounds, hooks, 120 + customs.length * 10, allNiches);
   const ds: Dataset = { creators, sounds, hooks, hashtags, videos };
   cache.set(key, ds);
   return ds;
