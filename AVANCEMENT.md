@@ -154,8 +154,16 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       `src/lib/alerts.ts` (partagée page + sidebar) — le badge affiche le
       nombre réel d'alertes et correspond toujours au contenu de la page
 - [x] Vérifié : build + lint OK, 503 sans clé testé, badge (7) = nombre de
-      lignes de la page Alertes ; **test de génération réelle à faire quand
-      la clé sera fournie**
+      lignes de la page Alertes
+- [x] **Génération réelle testée** (2026-07-15, clé fournie) : script IA
+      d'excellente qualité (répliques FR + indications de tournage, minutage
+      respecté sur 0:58), sauvegardé et vérifié en base (payload `script`)
+- [x] **Fix découvert au test** : policy RLS `UPDATE` manquante sur
+      `saved_items` — l'upsert (`insert ... on conflict do update`) échouait
+      sur une ligne existante ; migration `saved_items_update_policy` appliquée
+- [x] Note dev : après expiration/rotation du jeton (serveur redémarré),
+      la session peut tomber → l'UI affiche « Connectez-vous » proprement ;
+      backlog : rediriger vers /connexion dans ce cas
 
 ---
 
@@ -195,6 +203,8 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Génération IA des scripts (API Claude, `claude-opus-4-8`) — fait le
       2026-07-15 ; **reste** : fournir `ANTHROPIC_API_KEY` dans `.env.local`
       et tester une génération réelle
+- [ ] Session expirée côté client : rediriger vers /connexion au lieu du
+      simple toast « Connectez-vous »
 - [ ] Copilote IA réel : remplacer `answer()` dans
       `src/components/copilot/chat.tsx` par une route serveur API Claude
       (même pattern que `/api/script`)
