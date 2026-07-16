@@ -5,8 +5,17 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { COUNTRIES, TIMEFRAMES, NICHES, type Timeframe } from '@/lib/data';
 import { writePrefs } from '@/lib/prefs-client';
-import { sanitizeNiche, MAX_NICHES, type Prefs } from '@/lib/prefs-shared';
+import { PREFS_COOKIE, sanitizeNiche, MAX_NICHES, type Prefs } from '@/lib/prefs-shared';
 import { getSupabaseBrowser } from '@/lib/supabase/client';
+import {
+  GOAL_LABELS,
+  FREQUENCY_LABELS,
+  type PostingFrequency,
+  type PrimaryGoal,
+} from '@/lib/content/types';
+import { resetAll, saveProfile } from '@/lib/content/store';
+import { useProfile } from '@/lib/content/use-store';
+import { track } from '@/lib/analytics';
 import { ProfileAnalyzer } from '@/components/profile-analyzer';
 import type { ProfileAnalysis } from '@/lib/profile-analysis';
 import { Chevron } from '@/components/icons';
@@ -24,11 +33,23 @@ export function SettingsForm({
   tiktokAnalysis?: ProfileAnalysis | null;
 }) {
   const router = useRouter();
+  const profile = useProfile();
   const [country, setCountry] = useState(initial.country);
   const [tf, setTf] = useState<Timeframe>(initial.tf);
   const [niches, setNiches] = useState<string[]>(initial.niches);
   const [customInput, setCustomInput] = useState('');
   const [busy, setBusy] = useState(false);
+  const [goal, setGoal] = useState<PrimaryGoal>('grow_audience');
+  const [frequency, setFrequency] = useState<PostingFrequency>('three_four_week');
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
+  /* Objectif et rythme vivent dans le profil localStorage —
+     synchronisés pendant le rendu (pattern officiel), pas en effet. */
+  if (profile && !profileLoaded) {
+    setProfileLoaded(true);
+    setGoal(profile.primaryGoal);
+    setFrequency(profile.postingFrequency);
+  }
 
   function toggleNiche(name: string) {
     setNiches((prev) =>
@@ -54,6 +75,14 @@ export function SettingsForm({
     setBusy(true);
     try {
       writePrefs({ country, tf, niches });
+      saveProfile({
+        primaryNiche: niches[0],
+        secondaryNiches: niches.slice(1, 3),
+        market: country,
+        primaryGoal: goal,
+        postingFrequency: frequency,
+      });
+      track('settings_updated', { goal, frequency });
       const supabase = getSupabaseBrowser();
       if (supabase && userEmail) {
         const { data: auth } = await supabase.auth.getUser();
@@ -154,6 +183,45 @@ export function SettingsForm({
         </div>
       </div>
 
+      <div className="card rail-card reveal" style={{ padding: 24, animationDelay: '75ms' }}>
+        <h4>Objectif &amp; rythme</h4>
+        <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>
+          Ils pilotent le classement des opportunités et la mission du jour.
+        </p>
+        <div className="field" style={{ marginBottom: 8 }}>
+          <label>Résultat recherché</label>
+        </div>
+        <div className="chip-row" role="radiogroup" aria-label="Objectif principal">
+          {(Object.keys(GOAL_LABELS) as PrimaryGoal[]).map((g) => (
+            <button
+              key={g}
+              role="radio"
+              aria-checked={goal === g}
+              className={`pill${goal === g ? ' on' : ''}`}
+              onClick={() => setGoal(g)}
+            >
+              {GOAL_LABELS[g]}
+            </button>
+          ))}
+        </div>
+        <div className="field" style={{ margin: '16px 0 8px' }}>
+          <label>Fréquence de publication</label>
+        </div>
+        <div className="chip-row" role="radiogroup" aria-label="Fréquence de publication">
+          {(Object.keys(FREQUENCY_LABELS) as PostingFrequency[]).map((f) => (
+            <button
+              key={f}
+              role="radio"
+              aria-checked={frequency === f}
+              className={`pill${frequency === f ? ' on' : ''}`}
+              onClick={() => setFrequency(f)}
+            >
+              {FREQUENCY_LABELS[f]}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className="card rail-card reveal" style={{ padding: 24, animationDelay: '90ms' }}>
         <h4>Profil TikTok</h4>
         <p style={{ color: 'var(--muted)', fontSize: 13, marginBottom: 14 }}>
@@ -197,6 +265,35 @@ export function SettingsForm({
             </Link>
           </>
         )}
+      </div>
+
+      <div className="card rail-card reveal" style={{ padding: 24, animationDelay: '140ms' }}>
+        <h4>Application</h4>
+        <div className="rail-row">
+          <span className="k">Copilote &amp; recherche</span>
+          <span className="v">Mode démonstration<small>réponses générées localement</small></span>
+        </div>
+        <div className="rail-row">
+          <span className="k">Tendances</span>
+          <span className="v">Vraies données TikTok<small>repli démo automatique</small></span>
+        </div>
+        <p style={{ color: 'var(--muted)', fontSize: 13, margin: '12px 0' }}>
+          Réinitialiser l&apos;onboarding efface votre profil local et vos contenus
+          (localStorage de cet appareil), puis relance le parcours de démarrage.
+        </p>
+        <button
+          className="btn btn-secondary btn-sm"
+          onClick={() => {
+            if (!window.confirm('Réinitialiser l’onboarding ? Profil et contenus locaux seront effacés.')) return;
+            resetAll();
+            document.cookie = `${PREFS_COOKIE}=; path=/; max-age=0`;
+            toast('Onboarding réinitialisé');
+            router.push('/');
+            router.refresh();
+          }}
+        >
+          Réinitialiser l&apos;onboarding
+        </button>
       </div>
 
       <div style={{ display: 'flex', gap: 10 }}>

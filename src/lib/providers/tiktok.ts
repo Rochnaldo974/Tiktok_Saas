@@ -219,6 +219,8 @@ function mapPost(post: RawPost, niche: string, country: string, generic = false)
    du hashtag). Items enveloppés dans { aweme_info: {...} }. */
 const COUNTRY_CODES: Record<string, string> = {
   France: 'fr',
+  Belgique: 'be',
+  Suisse: 'ch',
   'États-Unis': 'us',
   'Royaume-Uni': 'gb',
   Espagne: 'es',
@@ -439,6 +441,8 @@ function fetchNicheBundle(niche: string, country: string): Promise<Bundle> {
 /* Tendances globales du pays (section « Viral en ce moment »). */
 const COUNTRY_TREND_QUERY: Record<string, string> = {
   France: 'pourtoi',
+  Belgique: 'pourtoi',
+  Suisse: 'pourtoi',
   'États-Unis': 'fyp',
   'Royaume-Uni': 'fyp',
   Espagne: 'parati',

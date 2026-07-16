@@ -1,11 +1,12 @@
 'use client';
 
-import { Suspense, useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { Search, Globe, Calendar, Chevron, Alerts, UserIcon } from '@/components/icons';
 import { toast } from '@/components/toaster';
 import { CommandMenu } from '@/components/command-menu';
+import { buildAlerts } from '@/lib/alerts';
 import { COUNTRIES, TIMEFRAMES, resolveCountry, resolveTimeframe, type Timeframe } from '@/lib/data';
 
 function DropMenu({
@@ -91,6 +92,13 @@ function TopbarInner({ defaultCountry, defaultTimeframe, followedNiches, userEma
     router.push(`${pathname}?${next.toString()}`);
   }
 
+  /* Même builder que la page Alertes : le badge de la cloche correspond
+     toujours exactement à ce que l'utilisateur trouvera derrière. */
+  const alertCount = useMemo(
+    () => buildAlerts(country, timeframe, followedNiches).length,
+    [country, timeframe, followedNiches],
+  );
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -106,7 +114,7 @@ function TopbarInner({ defaultCountry, defaultTimeframe, followedNiches, userEma
     <header className="topbar">
       <button className="search-trigger" onClick={() => setCmdkOpen(true)} aria-label="Rechercher">
         <Search />
-        <span>Rechercher des vidéos, créateurs, sons, hashtags ou hooks...</span>
+        <span>Rechercher une opportunité, un son, un hook ou un créateur…</span>
         <span className="kbd">⌘K</span>
       </button>
       <div className="top-actions">
@@ -130,9 +138,13 @@ function TopbarInner({ defaultCountry, defaultTimeframe, followedNiches, userEma
             setParam('tf', v);
           }}
         />
-        <Link className="icon-btn" aria-label="Voir les alertes" href="/alertes">
+        <Link
+          className="icon-btn"
+          aria-label={alertCount > 0 ? `Voir les ${alertCount} alertes` : 'Voir les alertes'}
+          href="/alertes"
+        >
           <Alerts />
-          <span className="dot" />
+          {alertCount > 0 && <span className="dot" aria-hidden="true" />}
         </Link>
         {userEmail ? (
           <Link

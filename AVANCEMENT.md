@@ -337,6 +337,92 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       À terme : candidater à l'API officielle TikTok, surveiller la
       disponibilité tikwm en prod
 
+### 2026-07-17 — REFONTE UX MAJEURE : du dashboard au parcours (cahier des charges produit)
+**Signal n'est plus un dashboard d'analytics : c'est « l'outil qui me dit quoi
+publier aujourd'hui et m'aide à le créer ».** Cycle complet sans compte ni
+backend : trouver → comprendre → adapter → scripter → tourner → vérifier →
+publier → apprendre. Décisions verrouillées avec l'utilisateur : vraies données
+conservées, script local pour tous + IA Claude en bonus connecté, cycle en
+localStorage (Supabase dormant).
+
+- [x] **Navigation réduite à 3 destinations** (Aujourd'hui `/`, Opportunités
+      `/opportunites`, Mes contenus `/contenus`) + bouton global « + Préparer
+      un contenu » ; Réglages/profil en bas de sidebar ; badge alertes déplacé
+      sur la cloche (compteur réel) ; **nav mobile inférieure** (≤960 px, la
+      sidebar disparaît) ; redirections `/idees→/opportunites`,
+      `/bibliotheque→/contenus`, `/planning→/contenus` (query préservée)
+- [x] **Nouveau domaine `src/lib/content/`** : types (UserProfile,
+      GeneratedContent, scènes visuel/prononcé/écran), **machine d'états 13
+      statuts** (idea→script_ready→to_film→…→performance_available, labels FR,
+      transitions validées, CTA par statut), **store localStorage**
+      (`signal:profile:v1`, `signal:contents:v1`, useSyncExternalStore, zéro
+      mismatch d'hydratation), **Score d'opportunité** (30 % croissance,
+      20 % saturation, 15 % récence, 15 % niche, 10 % facilité, 10 % objectif ;
+      plafond 80 si saturé ; niveaux + info-bulle — **« Score viral » a disparu
+      de toute l'UI**), générateur étendu (6 styles, variantes de hook,
+      réécritures), vérification vidéo honnête, enseignements dérivés des
+      métriques saisies, analytics locale (`track()`, ~40 événements)
+- [x] **Onboarding rebuild** : intro valeur → TikTok facultatif (3 chemins,
+      OAuth « Bientôt disponible » NON simulé, @handle → analyse publique
+      réelle, « sans compte » non-inférieur) → niches (3 max, 1 principale,
+      libres) → objectif (6) → marché (+ Belgique/Suisse) + fréquence de
+      publication ; barre de progression, écran de génération animé ; double
+      écriture localStorage + cookie `sig-prefs`
+- [x] **Aujourd'hui dynamique (états A–I)** : mission du jour selon le statut
+      du contenu (préparer / script en cours / prêt à tourner + checklist /
+      vérifier / corrections / prête à publier / publiée / résultats),
+      progression sobre 6 étapes, « Depuis votre dernière visite » (3 max,
+      seedé), diagnostic par niche+objectif (ou audit réel), top 3 opportunités
+      (meilleure / plus simple / moins saturée) avec raison personnalisée ;
+      respecte la fréquence (hebdo ≠ quotidien ≠ multi/jour) et les retours
+      multiples le même jour (visitsToday, nudge court)
+- [x] **Opportunités** : fusion Idées+Sons+Hooks ; recherche d'intention avec
+      suggestions, 3 modes (Recommandées/Émergentes/Faciles), filtres utiles +
+      « Plus de filtres », cartes hiérarchisées, panneau détail restructuré
+      (Pourquoi ça fonctionne / Pourquoi cela vous correspond / À reprendre /
+      À personnaliser / Adapter · Enregistrer — sans gate Supabase)
+- [x] **AdaptationFlow** (« Adapter cette idée ») : 3 questions guidées (sujet
+      prérempli, objectif présélectionné, style ×6) → génération locale →
+      script scène par scène (visuel/texte prononcé/texte à l'écran), hook +
+      variantes (plus direct/intrigant), infos pratiques (« Créneau suggéré »,
+      jamais garanti), 3 conseils, ajouter/copier/simplifier/raccourcir/angle
+- [x] **Mes contenus** : 5 sections par étape du cycle, CTA par statut,
+      planification simple (Aujourd'hui/Cette semaine/Plus tard + date),
+      dupliquer/supprimer/publier (lien facultatif) / métriques manuelles →
+      enseignements ; invitation compte non bloquante après 3 contenus ;
+      éditeur `/contenus/[id]` (contentEditable, checklist tournage,
+      « Rédiger avec l'IA » conservé pour les connectés)
+- [x] **Vérifier ma vidéo** (`/contenus/[id]/verifier`) : fichier local
+      MP4/MOV/WebM (drag&drop, aperçu objectURL révoqué, ZÉRO upload, zéro
+      binaire en localStorage), métadonnées objectives (durée, orientation),
+      checklist 9 questions → rapport honnête (« basé sur votre checklist »,
+      mode manual_checklist) ; interface VideoReviewService prête pour une
+      vraie analyse future
+- [x] **Copilote contextuel** « Demander à Signal » (panneau flottant,
+      suggestions par contexte, « Mode démonstration » affiché) — `/copilote`
+      hors nav ; ⌘K regroupé (Opportunités/Sons/Hooks/Créateurs) avec actions
+      utiles ; Réglages : objectif + fréquence + réinitialiser l'onboarding
+- [x] **Testé en réel dans le navigateur** (cycle complet sans compte) :
+      onboarding → mission A → adaptation d'une VRAIE vidéo TikTok
+      (@leanne_dnd) → script → état D (prêt à tourner) → tournée → vérification
+      (fichier + checklist → rapport 67/100, 3 corrections) → corrigée →
+      publiée → état H → métriques saisies → état I (6/6) → nouvelle journée
+      simulée (reset, contenus conservés, « Depuis votre dernière visite »
+      avec vraies données) ; zéro erreur console ; build + lint 0 erreur
+- [x] **Bug de fuseau corrigé** (découvert au test) : `isFromToday` comparait
+      les ISO UTC au jour local → à 00h47 Paris la mission ignorait le contenu
+      du jour ; désormais tout est comparé en jour LOCAL
+- [x] Nettoyage : suppression de script.ts, daily-plan, onboarding v1, cartes
+      video/sound/hook/tag/creator, composants ideas/library/planning
+      (fusionnés) ; `answer()` du copilote extrait en module partagé
+- [ ] Limites connues : responsive mobile vérifié par règles CSS (le resize
+      Chrome était bloqué en plein écran macOS) → à contrôler sur téléphone
+      via Netlify ; sons/hooks des sections secondaires liés à la meilleure
+      vidéo disponible (pas à la vidéo exacte du son) ; « idea » (opportunité
+      enregistrée sans script) n'apparaît pas encore dans Mes contenus (les
+      enregistrements vivent dans le profil) ; synchro Supabase du cycle =
+      itération future
+
 ---
 
 ## 🔜 Immédiat
@@ -417,3 +503,7 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Analyse de profil accessible sans compte, rate-limitée par IP | C'est l'accroche d'acquisition (« audit gratuit de ton compte ») ; le coût IA est contenu par le rate limit |
 | 2026-07-16 | Données TikTok : tikwm (gratuit) en primaire, EnsembleData en secours, démo en dernier recours | Zéro coût de données au lancement ; le « 100 % fiable » n'existant pas (tout est scraping non contractuel), la fiabilité vient de la chaîne de repli à 3 niveaux |
 | 2026-07-16 | Hooks = accroches réelles extraites des descriptions, avec % de likes mesuré (plus de « rétention » inventée) | Les hooks sont l'atout du SaaS : une valeur inventée détruirait la confiance ; la description des posts est la seule accroche accessible sans transcrire les vidéos |
+| 2026-07-17 | Refonte : 3 destinations + machine d'états du contenu, cycle en localStorage sans compte | Le produit doit être « quoi publier aujourd'hui + aide à le créer », pas un dashboard ; le cycle complet doit être démontrable sans authentification ni backend |
+| 2026-07-17 | « Score viral » banni de l'UI → « Score d'opportunité » pondéré et explicable ; jamais de promesse de viralité | Un score inexpliqué détruit la confiance ; la formule (croissance/saturation/récence/niche/facilité/objectif) est documentée dans l'info-bulle |
+| 2026-07-17 | Signal ne fabrique JAMAIS la vidéo finale ni ne publie sur TikTok ; vérification vidéo = checklist manuelle honnête (fichier 100 % local) | Pas de fausse IA, pas de faux OAuth, pas de faux upload — l'honnêteté produit prime ; l'interface VideoReviewService accueillera une vraie analyse plus tard |
+| 2026-07-17 | Vocabulaire : « Préparer un contenu », « Générer mon script », « prêt à tourner », « Créneau suggéré » | Ne jamais laisser croire que Signal crée la vidéo ou garantit une heure de publication |

@@ -146,7 +146,7 @@ export interface Dataset {
 /* ---------- RNG seedé ---------- */
 type Rnd = () => number;
 
-function mulberry32(a: number): Rnd {
+export function mulberry32(a: number): Rnd {
   return function () {
     a |= 0;
     a = (a + 0x6d2b79f5) | 0;
@@ -168,6 +168,8 @@ export function hashStr(s: string): number {
 /* ---------- vocabulaire ---------- */
 export const COUNTRIES: Country[] = [
   { code: 'FR', name: 'France' },
+  { code: 'BE', name: 'Belgique' },
+  { code: 'CH', name: 'Suisse' },
   { code: 'US', name: 'États-Unis' },
   { code: 'UK', name: 'Royaume-Uni' },
   { code: 'ES', name: 'Espagne' },

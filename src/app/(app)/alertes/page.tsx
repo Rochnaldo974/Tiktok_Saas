@@ -48,7 +48,7 @@ export default async function AlertsPage({ searchParams }: { searchParams: Searc
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
                 <span className="alert-time">{a.time}</span>
                 {a.niche && (
-                  <Link className="section-link" href={`/idees${q}&niche=${encodeURIComponent(a.niche)}`}>
+                  <Link className="section-link" href={`/opportunites${q}&niche=${encodeURIComponent(a.niche)}`}>
                     Voir <ArrowRight />
                   </Link>
                 )}

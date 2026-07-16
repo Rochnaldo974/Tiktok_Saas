@@ -4,11 +4,47 @@ import type { Video } from '@/lib/data';
 import { fmt, dur, ago, STATUS_LABELS, DIFFICULTY_LABELS, SATURATION_LABELS } from '@/lib/data';
 import { avatarStyle } from '@/lib/visuals';
 import { ThumbBg } from '@/components/cards/thumb';
-import { Up, Play, Sparkle, Check, Copy, Wand, Heart, Comment, Share } from '@/components/icons';
-import { toast } from '@/components/toaster';
+import { Up, Play, Sparkle, Wand, Heart, Comment, Share } from '@/components/icons';
 import { openTrendPanel } from '@/components/trend-panel';
+import { openAdaptation } from '@/components/adaptation/adaptation-flow';
+import {
+  computeOpportunityScore,
+  personalReason,
+  LEVEL_LABELS,
+  SCORE_TOOLTIP,
+  type ScoreContext,
+} from '@/lib/content/opportunity-score';
+import { useProfile } from '@/lib/content/use-store';
+import { track } from '@/lib/analytics';
 
-export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number }) {
+/* Carte d'opportunité : hiérarchie stricte — concept, Score
+   d'opportunité, statut, raison personnalisée, temps, saturation.
+   Le reste (stats, hook, son, structure) vit dans le panneau détail. */
+
+export function OpportunityCard({
+  video: v,
+  delay = 0,
+  tagLabel,
+  fallbackNiches = [],
+}: {
+  video: Video;
+  delay?: number;
+  /* étiquette de classement (« Meilleure opportunité »...) */
+  tagLabel?: string;
+  /* niches suivies côté serveur, avant hydratation du profil */
+  fallbackNiches?: string[];
+}) {
+  const profile = useProfile();
+  const ctx: ScoreContext = profile
+    ? {
+        niches: [profile.primaryNiche, ...profile.secondaryNiches].filter(Boolean),
+        primaryNiche: profile.primaryNiche || null,
+        goal: profile.primaryGoal,
+      }
+    : { niches: fallbackNiches, primaryNiche: fallbackNiches[0] ?? null, goal: null };
+  const score = computeOpportunityScore(v, ctx);
+  const reason = personalReason(v, ctx);
+
   return (
     <article className="card idea-card reveal" style={{ animationDelay: `${delay}ms` }}>
       <a
@@ -35,7 +71,6 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
         </div>
         <div className="play-hint">
           <span className="circle"><Play /></span>
-          <span className="badge" style={{ position: 'absolute', bottom: '38%' }}>Voir sur TikTok</span>
         </div>
         <div className="tt-rail" aria-hidden="true">
           <span className="avatar-sm" style={avatarStyle(v.creator.hue)}>{v.creator.initials}</span>
@@ -51,13 +86,11 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
       </a>
 
       <div className="idea-body">
+        {tagLabel ? <p className="eyebrow" style={{ marginBottom: -4 }}>{tagLabel}</p> : null}
         <div className="idea-head">
           <div style={{ minWidth: 0 }}>
             <h3 className="idea-title">{v.title}</h3>
             <div className="creator-line" style={{ marginTop: 8 }}>
-              <span className="avatar-sm" style={{ width: 24, height: 24, fontSize: 8, ...avatarStyle(v.creator.hue) }}>
-                {v.creator.initials}
-              </span>
               <span className="who">{v.creator.handle}</span>
               <span className="what">· {fmt(v.views)} vues · {v.contentType}</span>
             </div>
@@ -66,37 +99,35 @@ export function IdeaCard({ video: v, delay = 0 }: { video: Video; delay?: number
         </div>
 
         <div className="fact-row">
-          <div className="fact"><b className="up">{v.viralScore}/100</b><span>Score viral</span></div>
+          <div
+            className="fact"
+            title={SCORE_TOOLTIP}
+            aria-label={`Score d'opportunité : ${score.score} sur 100 — ${LEVEL_LABELS[score.level]}. ${SCORE_TOOLTIP}`}
+          >
+            <b className={`score-badge ${score.level}`}>{score.score}/100</b>
+            <span>Score d&apos;opportunité</span>
+          </div>
           <div className="fact"><b>{v.prodTime} · {DIFFICULTY_LABELS[v.difficulty]}</b><span>Production</span></div>
           <div className="fact"><b>{SATURATION_LABELS[v.saturation]}</b><span>Saturation</span></div>
         </div>
 
         <div className="ai-note">
           <Sparkle />
-          <span>{v.summary} <strong>{v.context}</strong></span>
-        </div>
-
-        <div className="copy-list">
-          <h5>Votre version, en 3 étapes</h5>
-          <ul>
-            <li className="yes"><Check /> Ouvrir avec : « {v.hook.text} »</li>
-            <li className="yes"><Check /> Filmer avec le son « {v.sound.name} » — {v.prodReason.toLowerCase()}</li>
-            <li className="yes"><Check /> Conclure avec : « {v.cta} »</li>
-          </ul>
+          <span><strong>Pour vous :</strong> {reason}</span>
         </div>
 
         <div className="card-actions">
+          <button className="btn btn-primary btn-sm" onClick={() => openAdaptation(v)}>
+            <Wand /> Adapter cette idée
+          </button>
           <button
             className="btn btn-secondary btn-sm"
             onClick={() => {
-              navigator.clipboard?.writeText(v.hook.text);
-              toast('Hook copié dans le presse-papiers');
+              track('opportunity_opened', { id: v.id, real: Boolean(v.real) });
+              openTrendPanel(v, 'analyse');
             }}
           >
-            <Copy /> Copier le hook
-          </button>
-          <button className="btn btn-primary btn-sm" onClick={() => openTrendPanel(v, 'script')}>
-            <Wand /> Créer mon script
+            Comprendre pourquoi
           </button>
         </div>
       </div>
