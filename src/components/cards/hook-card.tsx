@@ -1,7 +1,8 @@
 'use client';
 
 import type { Hook } from '@/lib/data';
-import { Copy, Save } from '@/components/icons';
+import { fmt } from '@/lib/data';
+import { Copy, Save, Up } from '@/components/icons';
 import { toast } from '@/components/toaster';
 import { saveItem } from '@/lib/library';
 
@@ -11,13 +12,24 @@ export function HookCard({ hook: h, delay = 0 }: { hook: Hook; delay?: number })
       <div className="chip-row">
         <span className="chip hot">{h.type}</span>
         {h.industries.map((n) => <span key={n} className="chip">{n}</span>)}
+        {h.real && <span className="chip cyan" style={{ marginLeft: 'auto' }}>Réel</span>}
       </div>
       <p className="hook-text">{h.text}</p>
       <p style={{ color: 'var(--muted)', fontSize: 13 }}>{h.explanation}</p>
       <div className="hook-meta">
-        <span>{h.performance} % de rétention</span>
-        <span className="perf-bar"><i style={{ width: `${h.performance}%` }} /></span>
-        <span>vidéos de ~{h.avgDuration} s</span>
+        {h.real ? (
+          <>
+            <span>{fmt(h.views ?? 0)} vues</span>
+            <span className="perf-bar"><i style={{ width: `${Math.min(100, h.performance * 6)}%` }} /></span>
+            <span>{h.performance} % de likes</span>
+          </>
+        ) : (
+          <>
+            <span>{h.performance} % de rétention</span>
+            <span className="perf-bar"><i style={{ width: `${h.performance}%` }} /></span>
+            <span>vidéos de ~{h.avgDuration} s</span>
+          </>
+        )}
       </div>
       <div className="card-actions">
         <button
@@ -42,6 +54,11 @@ export function HookCard({ hook: h, delay = 0 }: { hook: Hook; delay?: number })
         >
           <Save /> Sauvegarder
         </button>
+        {h.real && h.url && (
+          <a className="btn btn-secondary btn-sm" href={h.url} target="_blank" rel="noopener noreferrer">
+            <Up /> La vidéo
+          </a>
+        )}
       </div>
     </article>
   );

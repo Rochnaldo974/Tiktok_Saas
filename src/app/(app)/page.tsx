@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
-import { getRealVideos, getGlobalRealVideos, getRealSounds, getRealHashtags } from '@/lib/providers/tiktok';
+import { getRealVideos, getGlobalRealVideos, getRealSounds, getRealHashtags, getRealHooks } from '@/lib/providers/tiktok';
 import { getPrefsState } from '@/lib/prefs';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { Onboarding } from '@/components/onboarding';
@@ -40,11 +40,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
      reste visible plus bas, marqué quand il sort de son périmètre.
      Si le provider de données réelles est actif, les vidéos des niches
      suivies sont de VRAIES vidéos TikTok (miniature + lien). */
-  const [realVideos, globalReal, realSounds, realHashtags] = await Promise.all([
+  const [realVideos, globalReal, realSounds, realHashtags, realHooks] = await Promise.all([
     getRealVideos(followed, country),
     getGlobalRealVideos(country),
     getRealSounds(followed, country),
     getRealHashtags(followed, country),
+    getRealHooks(followed, country),
   ]);
   const mockMine = d.videos.filter((v) => inNiches(v.niche));
   const myVideos = realVideos.length ? realVideos : mockMine;
@@ -53,9 +54,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
   const hashtags = realHashtags.length
     ? realHashtags
     : [...d.hashtags].sort((a, b) => Number(inNiches(b.niche)) - Number(inNiches(a.niche)));
+  const hooks = realHooks.length
+    ? realHooks
+    : [...d.hooks].sort((a, b) => Number(b.industries.some(inNiches)) - Number(a.industries.some(inNiches)));
   const topVideo = myVideos[0] ?? d.videos[0];
   const topSound = sounds[0];
-  const topHook = d.hooks.find((h) => h.industries.some(inNiches)) ?? d.hooks[0];
+  const topHook = hooks[0] ?? d.hooks[0];
   const myPeaking = myVideos.filter((v) => v.status === 'Peaking').length;
   const rising = d.sounds.filter((s) => s.rising).length;
   const avgViral = Math.round(d.videos.slice(0, 20).reduce((a, v) => a + v.viralScore, 0) / 20);
@@ -200,16 +204,17 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             <div>
               <p className="eyebrow">Ingénierie de rétention</p>
               <h2 className="section-title" id="hooks-title">Les hooks qui retiennent</h2>
-              <p className="section-sub">En premier : ceux qui performent dans vos niches.</p>
+              <p className="section-sub">
+                {realHooks.length
+                  ? 'Les accroches réelles des vidéos qui tournent dans vos niches cette semaine.'
+                  : 'En premier : ceux qui performent dans vos niches.'}
+              </p>
             </div>
           </div>
           <div className="hook-grid">
-            {[...d.hooks]
-              .sort((a, b) => Number(b.industries.some(inNiches)) - Number(a.industries.some(inNiches)))
-              .slice(0, 6)
-              .map((h, i) => (
-                <HookCard key={h.id} hook={h} delay={i * 60} />
-              ))}
+            {hooks.slice(0, 6).map((h, i) => (
+              <HookCard key={h.id} hook={h} delay={i * 60} />
+            ))}
           </div>
         </section>
 
@@ -316,8 +321,8 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
           </div>
           <p style={{ marginTop: 12, fontSize: 11, color: 'var(--faint)', lineHeight: 1.5 }}>
             {realVideos.length
-              ? 'Vidéos, sons et hashtags de vos niches sont de vraies données TikTok des 7 derniers jours (badge « Réel »).'
-              : "Tendances simulées pour la démo — le branchement aux données TikTok réelles est en cours. L'analyse de profil, elle, utilise déjà de vraies données."}
+              ? 'Vidéos, sons, hooks et hashtags de vos niches sont de vraies données TikTok des 7 derniers jours (badge « Réel »).'
+              : "Données en cours de chargement ou indisponibles — tendances simulées affichées en attendant. L'analyse de profil, elle, utilise toujours de vraies données."}
           </p>
         </div>
         {transferable && (
@@ -344,7 +349,12 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
         )}
         <div className="card rail-quote reveal" style={{ animationDelay: '160ms' }}>
           <p>{topHook.text}</p>
-          <span><Quote style={{ width: 11, height: 11, display: 'inline', verticalAlign: '-1px' }} /> Top hook · {topHook.performance} % de rétention</span>
+          <span>
+            <Quote style={{ width: 11, height: 11, display: 'inline', verticalAlign: '-1px' }} />{' '}
+            {topHook.real
+              ? `Hook réel · ${fmt(topHook.views ?? 0)} vues cette semaine`
+              : `Top hook · ${topHook.performance} % de rétention`}
+          </span>
         </div>
       </aside>
     </div>

@@ -273,12 +273,11 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] **« Viral en ce moment » aussi en réel** (le mélange réel/mock était
       incohérent) : tendances du pays via le mot-clé local (#pourtoi,
       #fyp, #parati...), hooks génériques sans niche
-- [ ] Suite données réelles : sons/hashtags réels (endpoints EnsembleData
-      dédiés) ; « +X % » des vidéos réelles = estimé depuis l'engagement →
-      afficher plutôt vues/jour réelles ; à l'échelle : cache partagé
-      (table Supabase ou cron) au lieu du cache mémoire par instance ;
-      comparer les coûts EnsembleData vs Apify avant lancement ;
-      candidater à l'API officielle TikTok en parallèle
+- [ ] Suite données réelles : « +X % » des vidéos réelles = estimé depuis
+      l'engagement → afficher plutôt vues/jour réelles ; à l'échelle :
+      cache partagé (table Supabase ou cron) au lieu du cache mémoire par
+      instance ; candidater à l'API officielle TikTok en parallèle ;
+      abonnés créateurs non fournis par tikwm (follower_count 0 masqué)
 
 ### 2026-07-16 — Sons et hashtags en vraies données + perfs provider
 - [x] **Sons réels** : extraits des mêmes appels que les vidéos (zéro coût
@@ -295,6 +294,49 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] Vérifié en réel : sons (« Montagem Contigo Dale », 716 k vidéos,
       pochettes) et hashtags (#dancetrend, #worldcup...) réels à l'écran
 
+### 2026-07-16 — Source gratuite (tikwm) + hooks réels : plus AUCUNE clé requise
+- [x] **Sondes d'alternatives gratuites** : Creative Center TikTok toujours
+      signé (40101), API Recherche officielle réservée aux chercheurs ;
+      **tikwm.com fonctionne** — gratuit, sans clé, mêmes données que
+      l'endpoint payant (recherche mot-clé, période 7/30 j, tri par likes,
+      région, stats, musique + pochette, `region` par vidéo)
+- [x] **tikwm = source PRIMAIRE** (`fetchTikwmPosts`, items normalisés vers
+      le format aweme commun) : l'app tourne en vraies données sans aucun
+      abonnement ; appels sérialisés ~1/s (limite publique) + cache 45 min ;
+      filtre région par vidéo (on garde le pays demandé si ≥ 4 posts)
+- [x] **EnsembleData rétrogradé en secours** : appelé seulement si tikwm
+      renvoie < 4 posts — le quota du token est réservé aux pannes ;
+      `SIGNAL_DEMO_DATA=1` force la démo (debug)
+- [x] **Fix critique découvert au test** : `fetchKeywordBundle` gardait
+      l'ancienne garde `if (!token) return EMPTY_BUNDLE` — sans token,
+      RIEN n'était appelé (silencieux). Vérifié après fix : 42 badges
+      « Réel » en prod avec `ENSEMBLEDATA_TOKEN=""` (0,04 s en cache)
+- [x] **Hooks réels** (le cœur du produit) : l'accroche = première phrase
+      de la description des posts qui tournent (`extractHookText`, filtre
+      qualité : ≥ 3 mots, 12-110 caractères, rejet tags/emojis seuls ;
+      < 10 k vues ignoré) ; **performance = % de likes MESURÉ**, type
+      classifié (POV/Question/Chiffré/Curiosité), lien vers la vidéo
+      source, badge Réel ; entrelacés par niche ; extraits des mêmes
+      appels (zéro coût API en plus)
+- [x] `realVideo()` : si la description contient une vraie accroche,
+      c'est ELLE le hook de la vidéo (panneau Analyse + plan du jour) —
+      le template par niche n'est plus qu'un filet de secours
+- [x] Affichages honnêtes : HookCard réelle = « N vues · X % de likes »
+      (plus de fausse « rétention »), plan du jour, panneau, citation du
+      rail adaptés ; note du rail : « Vidéos, sons, hooks et hashtags...
+      vraies données »
+- [x] `.env.example` recréé (il avait disparu) : documente qu'aucune clé
+      n'est requise pour les vraies données
+- [x] Vérifié en réel sans token (Fitness/Danse, France) : 6 hooks réels
+      FR à l'écran (« Il a failli me tuer avec ses grandes jambes ce
+      fou 😭 »...), 6 sons réels avec pochettes, hashtags liés, vidéos
+      fraîches < 7 j ; build + lint 0 erreur
+- [ ] Honnêteté : tikwm est un service tiers non contractuel (comme tout
+      scraping TikTok) — le « 100 % fiable » n'existe pas sur ce marché ;
+      la résilience vient de la chaîne tikwm → EnsembleData → démo.
+      À terme : candidater à l'API officielle TikTok, surveiller la
+      disponibilité tikwm en prod
+
 ---
 
 ## 🔜 Immédiat
@@ -302,8 +344,9 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 - [x] `npm install` dans le dossier principal — fait le 2026-07-15, build
       vérifié dans le dossier principal
 - [ ] `git push origin main` (main local est en avance sur origin/main)
-- [ ] Supprimer le worktree devenu inutile :
-      `git worktree remove .claude/worktrees/nextjs-rebuild`
+- [x] Supprimer le worktree devenu inutile — fait le 2026-07-16 (verrou
+      orphelin déverrouillé ; c'était lui qui polluait le lint avec
+      435 fausses erreurs)
 - [ ] Surveiller `npm audit` : 2 vulnérabilités modérées dans le `postcss`
       embarqué par Next (build-time uniquement, pas d'impact runtime) —
       **ne pas** lancer `npm audit fix --force` (rétrograderait Next à la v9) ;
@@ -367,3 +410,5 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 | 2026-07-15 | Toute recommandation doit finir en action 1-clic (script, sauvegarde, copie) — zéro bouton mort | Audit produit : la promesse client est « ouvre l'app, repars avec un script », pas « lis un dashboard » |
 | 2026-07-15 | Taxonomie de niches ouverte (champ libre + moteur par templates seedés) au lieu des 10 niches codées en dur | Audit client : la danseuse, le potier n'avaient aucune case — la valeur du produit est dans la micro-niche |
 | 2026-07-15 | Analyse de profil accessible sans compte, rate-limitée par IP | C'est l'accroche d'acquisition (« audit gratuit de ton compte ») ; le coût IA est contenu par le rate limit |
+| 2026-07-16 | Données TikTok : tikwm (gratuit) en primaire, EnsembleData en secours, démo en dernier recours | Zéro coût de données au lancement ; le « 100 % fiable » n'existant pas (tout est scraping non contractuel), la fiabilité vient de la chaîne de repli à 3 niveaux |
+| 2026-07-16 | Hooks = accroches réelles extraites des descriptions, avec % de likes mesuré (plus de « rétention » inventée) | Les hooks sont l'atout du SaaS : une valeur inventée détruirait la confiance ; la description des posts est la seule accroche accessible sans transcrire les vidéos |

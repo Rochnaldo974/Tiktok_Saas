@@ -176,7 +176,7 @@ export function TrendPanel() {
             </div>
             <div className="rail-row">
               <span className="k"><Quote /> Hook d&apos;ouverture</span>
-              <span className="v" style={{ maxWidth: 280 }}>« {v.hook.text} »<small>{v.hook.performance} % de rétention</small></span>
+              <span className="v" style={{ maxWidth: 280 }}>« {v.hook.text} »<small>{v.hook.real ? `accroche réelle de la vidéo · ${v.hook.performance} % de likes` : `${v.hook.performance} % de rétention`}</small></span>
             </div>
             <a
               className="section-link"

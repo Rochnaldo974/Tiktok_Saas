@@ -1,6 +1,7 @@
 'use client';
 
 import type { Video, Sound, Hook } from '@/lib/data';
+import { fmt } from '@/lib/data';
 import { openTrendPanel } from '@/components/trend-panel';
 import { saveItem } from '@/lib/library';
 import { toast } from '@/components/toaster';
@@ -57,7 +58,11 @@ export function DailyPlan({ video, sound, hook }: { video: Video; sound: Sound; 
         <Check />
         <span style={{ flex: 1 }}>
           Ouvrir avec un hook {hook.type.toLowerCase()}
-          <em>{hook.performance} % de rétention sur vos niches</em>
+          <em>
+            {hook.real
+              ? `accroche réelle · ${fmt(hook.views ?? 0)} vues cette semaine`
+              : `${hook.performance} % de rétention sur vos niches`}
+          </em>
         </span>
         <button
           className="btn btn-secondary btn-sm"

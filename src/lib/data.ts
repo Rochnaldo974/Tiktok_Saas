@@ -51,10 +51,15 @@ export interface Hook {
   id: string;
   text: string;
   type: string;
+  /* mock : % de rétention estimé ; réel : % de likes par vue (mesuré) */
   performance: number;
   industries: string[];
   avgDuration: number;
   explanation: string;
+  /* Données réelles : accroche extraite d'une vraie vidéo TikTok */
+  real?: boolean;
+  views?: number;
+  url?: string;
 }
 
 export interface Hashtag {
@@ -546,6 +551,27 @@ const GENERIC_VIDEO_HOOKS = [
   { text: 'Ce détail change tout — regarde bien.', type: 'Défi' },
 ];
 
+/* L'accroche réelle d'un post = la première phrase de sa description
+   (sans tags ni mentions). Rejette ce qui n'est pas une vraie phrase
+   (tags seuls, emojis, fragments) — mieux vaut aucun hook qu'un faux. */
+export function extractHookText(desc: string): string | null {
+  const clean = desc.replace(/#\S+/g, ' ').replace(/@\S+/g, ' ').replace(/\s+/g, ' ').trim();
+  const first = (clean.split(/(?<=[.!?…])\s+|\s*\|\s*|\n/)[0] ?? '').trim();
+  const letters = (first.match(/\p{L}/gu) ?? []).length;
+  const words = first.split(' ').filter((w) => /\p{L}/u.test(w)).length;
+  if (first.length < 12 || first.length > 110 || words < 3 || letters < 10) return null;
+  return first;
+}
+
+export function classifyHookType(text: string): string {
+  const t = text.toLowerCase();
+  if (t.startsWith('pov')) return 'POV';
+  if (text.includes('?') || /^(pourquoi|comment|qui |quand |est-ce|tu savais)/.test(t)) return 'Question';
+  if (/\d/.test(text)) return 'Chiffré';
+  if (/secret|personne|jamais|erreur|vérité|attends|choc/.test(t)) return 'Curiosité';
+  return 'Déclaratif';
+}
+
 export interface RealVideoInput {
   id: string;
   title: string;
@@ -578,6 +604,10 @@ export function realVideo(input: RealVideoInput): Video {
   const sat: Saturation = status === 'Saturated' ? 'High' : status === 'Peaking' ? 'Medium' : 'Low';
   const hookTemplate = input.generic ? pick(rnd, GENERIC_VIDEO_HOOKS) : pick(rnd, VIDEO_HOOK_TEMPLATES);
   const nicheLower = input.niche.charAt(0).toLowerCase() + input.niche.slice(1);
+  /* Si la description contient une vraie phrase d'accroche, c'est ELLE
+     le hook de la vidéo — le template n'est que le filet de secours. */
+  const realHookText = extractHookText(input.title);
+  const likeRate = input.views > 0 ? Math.max(1, Math.min(40, Math.round((input.likes / input.views) * 100))) : 1;
   const hoursAgo = input.createTime
     ? Math.max(1, Math.round((Date.now() / 1000 - input.createTime) / 3600))
     : int(rnd, 2, 46);
@@ -616,15 +646,28 @@ export function realVideo(input: RealVideoInput): Video {
       note: pick(rnd, AI_SOUND_NOTES),
       duration: Math.min(60, duration),
     },
-    hook: {
-      id: 'rh' + input.id,
-      text: input.generic ? hookTemplate.text : hookTemplate.text.replace('{t}', nicheLower),
-      type: hookTemplate.type,
-      performance: int(rnd, 70, 97),
-      industries: [input.niche],
-      avgDuration: duration,
-      explanation: pick(rnd, HOOK_EXPLANATIONS),
-    },
+    hook: realHookText
+      ? {
+          id: 'rh' + input.id,
+          text: realHookText,
+          type: classifyHookType(realHookText),
+          performance: likeRate,
+          industries: [input.niche],
+          avgDuration: duration,
+          explanation: `Accroche réelle de cette vidéo — ${fmt(input.views)} vues.`,
+          real: true,
+          views: input.views,
+          url: input.url,
+        }
+      : {
+          id: 'rh' + input.id,
+          text: input.generic ? hookTemplate.text : hookTemplate.text.replace('{t}', nicheLower),
+          type: hookTemplate.type,
+          performance: int(rnd, 70, 97),
+          industries: [input.niche],
+          avgDuration: duration,
+          explanation: pick(rnd, HOOK_EXPLANATIONS),
+        },
     contentType: pick(rnd, CONTENT_TYPES),
     duration,
     views: input.views,

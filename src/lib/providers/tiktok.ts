@@ -1,12 +1,27 @@
-import { hashStr, realVideo, type Video, type Sound, type Hashtag } from '@/lib/data';
+import {
+  hashStr,
+  realVideo,
+  fmt,
+  extractHookText,
+  classifyHookType,
+  type Video,
+  type Sound,
+  type Hashtag,
+  type Hook,
+} from '@/lib/data';
 
-/* Provider de données TikTok réelles (EnsembleData).
-   - Activé par ENSEMBLEDATA_TOKEN (essai gratuit sur ensembledata.com) ;
-     sans token, tout renvoie [] et l'app reste sur le moteur de démo.
-   - Une requête par niche suivie (posts récents du hashtag), cache
-     serveur 45 min — le quota du token est préservé.
-   - Parsing défensif : tout champ manquant → la vidéo est ignorée,
-     toute erreur réseau → fallback silencieux vers la démo. */
+/* Provider de données TikTok réelles, à deux sources :
+   1. tikwm.com (PRIMAIRE) — gratuit, sans clé, ~1 req/s : recherche
+      par mot-clé avec période, tri par likes et région. C'est la
+      source par défaut : l'app fonctionne en vraies données sans
+      aucun abonnement.
+   2. EnsembleData (SECOURS) — activé par ENSEMBLEDATA_TOKEN, appelé
+      seulement si tikwm ne renvoie rien (panne, rate limit).
+   Les deux sources sont normalisées vers le même format de post
+   (aweme), donc vidéos / sons / hashtags / hooks en sont extraits de
+   la même façon. Une requête par niche suivie, cache serveur 45 min.
+   Parsing défensif : champ manquant → post ignoré, erreur réseau →
+   fallback silencieux vers la démo. SIGNAL_DEMO_DATA=1 force la démo. */
 
 const CACHE_TTL_MS = 45 * 60 * 1000;
 /* L'API du plan d'essai répond en 3-7 s : timeout large côté fetch,
@@ -28,14 +43,17 @@ interface Bundle {
   videos: Video[];
   sounds: Sound[];
   hashtags: Hashtag[];
+  hooks: Hook[];
 }
 const cache = new Map<string, { at: number; bundle: Bundle }>();
 /* Déduplication : plusieurs rendus simultanés partagent le même appel. */
 const inFlight = new Map<string, Promise<Bundle>>();
-const EMPTY_BUNDLE: Bundle = { videos: [], sounds: [], hashtags: [] };
+const EMPTY_BUNDLE: Bundle = { videos: [], sounds: [], hashtags: [], hooks: [] };
 
 export function realDataEnabled(): boolean {
-  return Boolean(process.env.ENSEMBLEDATA_TOKEN);
+  /* tikwm ne demande aucune clé : les vraies données sont toujours
+     actives. Le kill switch ne sert qu'aux démos / au debug. */
+  return process.env.SIGNAL_DEMO_DATA !== '1';
 }
 
 /* Les posts EnsembleData suivent le format aweme de TikTok. */
@@ -132,6 +150,40 @@ function extractHashtags(posts: RawPost[], niche: string, query: string): Hashta
     }));
 }
 
+/* Hooks réels : la première phrase de la description des posts qui
+   tournent, avec l'engagement MESURÉ (likes/vues) comme performance.
+   Sous 10 k vues, une accroche ne prouve rien → ignorée. */
+function extractHooks(posts: RawPost[], niche: string): Hook[] {
+  const seen = new Set<string>();
+  const out: (Hook & { likes: number })[] = [];
+  for (const post of posts) {
+    const views = post.statistics?.play_count ?? 0;
+    const likes = post.statistics?.digg_count ?? 0;
+    if (views < 10_000) continue;
+    const text = extractHookText(post.desc ?? '');
+    if (!text) continue;
+    const norm = text.toLowerCase();
+    if (seen.has(norm)) continue;
+    seen.add(norm);
+    out.push({
+      id: 'rh' + (post.aweme_id ?? String(seen.size)) + '-' + hashStr(norm) % 997,
+      text,
+      type: classifyHookType(text),
+      performance: Math.max(1, Math.min(40, Math.round((likes / views) * 100))),
+      industries: [niche],
+      avgDuration: Math.max(5, Math.round((post.video?.duration ?? 15000) / 1000)),
+      explanation: `Accroche réelle d'une vidéo ${niche} à ${fmt(views)} vues cette semaine.`,
+      real: true,
+      views,
+      url: post.share_url,
+      likes,
+    });
+  }
+  return out
+    .sort((a, b) => b.likes - a.likes)
+    .map(({ likes: _unused, ...hook }) => hook);
+}
+
 function mapPost(post: RawPost, niche: string, country: string, generic = false): Video | null {
   const id = post.aweme_id;
   const stats = post.statistics;
@@ -180,6 +232,142 @@ interface RawSearchItem {
   aweme_info?: RawPost;
 }
 
+/* ---------- Source 1 : tikwm.com (gratuit, sans clé) ----------
+   Limite publique ~1 requête/seconde → les appels sont sérialisés
+   avec un intervalle ; le cache 45 min fait le reste. */
+const TIKWM_GAP_MS = 1200;
+let tikwmTail: Promise<void> = Promise.resolve();
+
+function tikwmSlot(): Promise<void> {
+  const slot = tikwmTail;
+  tikwmTail = slot.then(() => new Promise((r) => setTimeout(r, TIKWM_GAP_MS)));
+  return slot;
+}
+
+interface TikwmItem {
+  video_id?: string;
+  title?: string;
+  region?: string;
+  create_time?: number;
+  duration?: number;
+  cover?: string;
+  origin_cover?: string;
+  play_count?: number;
+  digg_count?: number;
+  comment_count?: number;
+  share_count?: number;
+  author?: { unique_id?: string };
+  music_info?: { id?: number | string; title?: string; author?: string; duration?: number; cover?: string };
+}
+
+/* Normalise un item tikwm vers le format aweme commun aux deux sources. */
+function tikwmToRawPost(item: TikwmItem): RawPost | null {
+  const id = item.video_id;
+  const handle = item.author?.unique_id;
+  if (!id || !handle) return null;
+  const title = item.title ?? '';
+  const music = item.music_info;
+  return {
+    aweme_id: id,
+    desc: title,
+    create_time: item.create_time,
+    share_url: `https://www.tiktok.com/@${handle}/video/${id}`,
+    author: { unique_id: handle, follower_count: 0 },
+    statistics: {
+      play_count: item.play_count ?? 0,
+      digg_count: item.digg_count ?? 0,
+      comment_count: item.comment_count ?? 0,
+      share_count: item.share_count ?? 0,
+    },
+    music:
+      music?.id !== undefined
+        ? {
+            id: music.id,
+            title: music.title,
+            author: music.author,
+            duration: music.duration,
+            user_count: 0, // non fourni par tikwm
+            cover_thumb: { url_list: music.cover ? [music.cover] : [] },
+          }
+        : undefined,
+    text_extra: [...title.matchAll(/#([\p{L}\p{N}_]+)/gu)].map((m) => ({ hashtag_name: m[1] })),
+    video: {
+      duration: (item.duration ?? 15) * 1000, // tikwm en secondes, aweme en ms
+      cover: { url_list: item.cover ? [item.cover] : item.origin_cover ? [item.origin_cover] : [] },
+    },
+  };
+}
+
+async function fetchTikwmPosts(query: string, country: string, period: number): Promise<RawPost[]> {
+  await tikwmSlot();
+  try {
+    const params = new URLSearchParams({
+      keywords: query,
+      count: '20',
+      region: COUNTRY_CODES[country] ?? 'fr',
+      publish_time: String(period), // 7 ou 30 jours — valeurs supportées
+      sort_type: '1', // par likes
+    });
+    const res = await fetch(`https://www.tikwm.com/api/feed/search?${params}`, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.error(`TikTok provider (tikwm): ${res.status} pour « ${query} »`);
+      return [];
+    }
+    const payload = (await res.json()) as { code?: number; data?: { videos?: TikwmItem[] } };
+    if (payload.code !== 0) {
+      console.error(`TikTok provider (tikwm): code ${payload.code} pour « ${query} »`);
+      return [];
+    }
+    const items = payload.data?.videos ?? [];
+    /* tikwm marque la région de CHAQUE vidéo : on garde le pays demandé
+       en priorité, et on ne complète avec le reste que si c'est maigre. */
+    const wanted = (COUNTRY_CODES[country] ?? 'fr').toUpperCase();
+    const local = items.filter((v) => (v.region ?? '').toUpperCase() === wanted);
+    const kept = local.length >= 4 ? local : items;
+    return kept.map(tikwmToRawPost).filter((p): p is RawPost => p !== null);
+  } catch (error) {
+    console.error('TikTok provider (tikwm)', error);
+    return [];
+  }
+}
+
+/* ---------- Source 2 : EnsembleData (secours, si token) ---------- */
+async function fetchEnsemblePosts(query: string, country: string, period: number): Promise<RawPost[]> {
+  const token = process.env.ENSEMBLEDATA_TOKEN;
+  if (!token) return [];
+  try {
+    const params = new URLSearchParams({
+      name: query,
+      cursor: '0',
+      period: String(period),
+      sorting: '1', // par likes — les tendances, pas le bruit
+      country: COUNTRY_CODES[country] ?? 'fr',
+      token,
+    });
+    const res = await fetch(`https://ensembledata.com/apis/tt/keyword/search?${params}`, {
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+      cache: 'no-store',
+    });
+    if (!res.ok) {
+      console.error(`TikTok provider (EnsembleData): ${res.status} pour « ${query} »`);
+      return [];
+    }
+    const payload = (await res.json()) as {
+      data?: { data?: RawSearchItem[]; posts?: RawSearchItem[] } | RawSearchItem[];
+    };
+    const d = payload.data;
+    const items = Array.isArray(d) ? d : d?.data ?? d?.posts ?? [];
+    return items.map((item) => item.aweme_info).filter((p): p is RawPost => Boolean(p));
+  } catch (error) {
+    console.error('TikTok provider (EnsembleData)', error);
+    return [];
+  }
+}
+
 async function fetchKeywordBundle(
   query: string,
   niche: string,
@@ -187,8 +375,7 @@ async function fetchKeywordBundle(
   generic = false,
   period = 7,
 ): Promise<Bundle> {
-  const token = process.env.ENSEMBLEDATA_TOKEN;
-  if (!token || !query) return EMPTY_BUNDLE;
+  if (!query) return EMPTY_BUNDLE;
   const key = `${query}|${country}|${generic}|${period}`;
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.bundle;
@@ -210,33 +397,15 @@ async function doFetchKeywordBundle(
   generic: boolean,
   period: number,
 ): Promise<Bundle> {
-  const token = process.env.ENSEMBLEDATA_TOKEN!;
   const hit = cache.get(key);
   try {
-    const params = new URLSearchParams({
-      name: query,
-      cursor: '0',
-      period: String(period),
-      sorting: '1', // par likes — les tendances, pas le bruit
-      country: COUNTRY_CODES[country] ?? 'fr',
-      token,
-    });
-    const res = await fetch(`https://ensembledata.com/apis/tt/keyword/search?${params}`, {
-      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-      cache: 'no-store',
-    });
-    if (!res.ok) {
-      console.error(`TikTok provider: ${res.status} pour « ${query} »`);
-      return hit?.bundle ?? EMPTY_BUNDLE;
+    /* tikwm d'abord (gratuit) ; EnsembleData seulement si tikwm rend
+       trop peu — le quota du token est réservé aux pannes. */
+    let rawPosts = await fetchTikwmPosts(query, country, period);
+    if (rawPosts.length < 4) {
+      const backup = await fetchEnsemblePosts(query, country, period);
+      if (backup.length > rawPosts.length) rawPosts = backup;
     }
-    const payload = (await res.json()) as {
-      data?: { data?: RawSearchItem[]; posts?: RawSearchItem[] } | RawSearchItem[];
-    };
-    const d = payload.data;
-    const items = Array.isArray(d) ? d : d?.data ?? d?.posts ?? [];
-    const rawPosts = items
-      .map((item) => item.aweme_info)
-      .filter((p): p is RawPost => Boolean(p));
     const videos = rawPosts
       .map((p) => mapPost(p, niche, country, generic))
       .filter((v): v is Video => v !== null)
@@ -251,6 +420,9 @@ async function doFetchKeywordBundle(
       videos,
       sounds: extractSounds(rawPosts, niche),
       hashtags: extractHashtags(rawPosts, niche, query),
+      /* pas de hooks depuis les tendances globales : sans niche, une
+         accroche hors contexte n'est pas actionnable */
+      hooks: generic ? [] : extractHooks(rawPosts, niche),
     };
     cache.set(key, { at: Date.now(), bundle });
     return bundle;
@@ -331,6 +503,30 @@ export async function getRealHashtags(niches: string[], country: string): Promis
   return [...byTag.values()]
     .sort((a, b) => (b.views ?? 0) - (a.views ?? 0))
     .slice(0, 8);
+}
+
+/* Hooks réels : accroches des posts qui tournent dans les niches
+   suivies, entrelacées par niche (diversité avant volume). */
+export async function getRealHooks(niches: string[], country: string): Promise<Hook[]> {
+  if (!realDataEnabled() || !niches.length) return [];
+  const bundles = await softly(
+    Promise.all(niches.slice(0, 8).map((n) => fetchNicheBundle(n, country))),
+    [] as Bundle[],
+  );
+  const seen = new Set<string>();
+  const out: Hook[] = [];
+  const max = Math.max(...bundles.map((b) => b.hooks.length), 0);
+  for (let i = 0; i < max; i++) {
+    for (const bundle of bundles) {
+      const hook = bundle.hooks[i];
+      if (!hook) continue;
+      const norm = hook.text.toLowerCase();
+      if (seen.has(norm)) continue;
+      seen.add(norm);
+      out.push(hook);
+    }
+  }
+  return out.slice(0, 8);
 }
 
 /* Vidéos réelles pour toutes les niches suivies, entrelacées
