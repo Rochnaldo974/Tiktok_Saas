@@ -41,6 +41,10 @@ export interface Sound {
   rising: boolean;
   note: string;
   duration: number;
+  /* Données réelles : pochette, nb de tendances de vos niches qui l'utilisent */
+  real?: boolean;
+  cover?: string;
+  trendCount?: number;
 }
 
 export interface Hook {
@@ -59,6 +63,9 @@ export interface Hashtag {
   growth: number;
   videos: number;
   niche: string;
+  /* Données réelles : vues cumulées dans les tendances de vos niches */
+  real?: boolean;
+  views?: number;
 }
 
 /* Valeurs internes stables (classes CSS, filtres d'URL) ;

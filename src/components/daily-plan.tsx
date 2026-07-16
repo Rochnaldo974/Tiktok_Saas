@@ -31,7 +31,11 @@ export function DailyPlan({ video, sound, hook }: { video: Video; sound: Sound; 
         <Check />
         <span style={{ flex: 1 }}>
           Utiliser le son « {sound.name} »
-          <em>+{sound.growth} % · fenêtre de tir</em>
+          <em>
+            {sound.real
+              ? `${sound.trendCount} tendance${(sound.trendCount ?? 0) > 1 ? 's' : ''} de vos niches`
+              : `+${sound.growth} % · fenêtre de tir`}
+          </em>
         </span>
         <button
           className="btn btn-secondary btn-sm"

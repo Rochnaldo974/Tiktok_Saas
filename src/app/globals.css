@@ -603,6 +603,7 @@ a { color: inherit; text-decoration: none; }
 }
 .chip svg { width: 11px; height: 11px; }
 .chip.hot { background: var(--accent-soft); border-color: rgba(254,44,85,0.25); color: var(--accent); }
+.chip.cyan { background: rgba(37,244,238,0.1); border-color: rgba(37,244,238,0.25); color: var(--live); }
 .chip.good { background: var(--green-soft); border-color: rgba(52,211,153,0.22); color: var(--green); }
 .chip.warn { background: var(--orange-soft); border-color: rgba(245,158,11,0.22); color: var(--orange); }
 

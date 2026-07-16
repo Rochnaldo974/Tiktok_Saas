@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { dataset, fmt, resolveCountry, resolveTimeframe } from '@/lib/data';
-import { getRealVideos, getGlobalRealVideos } from '@/lib/providers/tiktok';
+import { getRealVideos, getGlobalRealVideos, getRealSounds, getRealHashtags } from '@/lib/providers/tiktok';
 import { getPrefsState } from '@/lib/prefs';
 import { getSupabaseServer } from '@/lib/supabase/server';
 import { Onboarding } from '@/components/onboarding';
@@ -40,15 +40,21 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
      reste visible plus bas, marqué quand il sort de son périmètre.
      Si le provider de données réelles est actif, les vidéos des niches
      suivies sont de VRAIES vidéos TikTok (miniature + lien). */
-  const [realVideos, globalReal] = await Promise.all([
+  const [realVideos, globalReal, realSounds, realHashtags] = await Promise.all([
     getRealVideos(followed, country),
     getGlobalRealVideos(country),
+    getRealSounds(followed, country),
+    getRealHashtags(followed, country),
   ]);
   const mockMine = d.videos.filter((v) => inNiches(v.niche));
   const myVideos = realVideos.length ? realVideos : mockMine;
   const viralVideos = globalReal.length ? globalReal : d.videos;
+  const sounds = realSounds.length ? realSounds : d.sounds;
+  const hashtags = realHashtags.length
+    ? realHashtags
+    : [...d.hashtags].sort((a, b) => Number(inNiches(b.niche)) - Number(inNiches(a.niche)));
   const topVideo = myVideos[0] ?? d.videos[0];
-  const topSound = d.sounds[0];
+  const topSound = sounds[0];
   const topHook = d.hooks.find((h) => h.industries.some(inNiches)) ?? d.hooks[0];
   const myPeaking = myVideos.filter((v) => v.status === 'Peaking').length;
   const rising = d.sounds.filter((s) => s.rising).length;
@@ -110,11 +116,19 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
                   <strong>{topVideo.creator.handle}</strong> — croît de{' '}
                   <strong>+{topVideo.growth} %</strong> avec {fmt(topVideo.views)} vues. {topVideo.summary}
                 </p>
-                <p>
-                  Côté audio, <strong>« {topSound.name} »</strong> gagne{' '}
-                  <strong>+{topSound.growth} %</strong> avec moins de {fmt(topSound.videos)} vidéos —{' '}
-                  {rising} sons sont dans leur fenêtre de tir en {country}.
-                </p>
+                {topSound.real ? (
+                  <p>
+                    Côté audio, <strong>« {topSound.name} »</strong> porte{' '}
+                    <strong>{topSound.trendCount} tendance{(topSound.trendCount ?? 0) > 1 ? 's' : ''}</strong> de
+                    vos niches cette semaine{topSound.videos > 0 ? <> ({fmt(topSound.videos)} vidéos au total)</> : null}.
+                  </p>
+                ) : (
+                  <p>
+                    Côté audio, <strong>« {topSound.name} »</strong> gagne{' '}
+                    <strong>+{topSound.growth} %</strong> avec moins de {fmt(topSound.videos)} vidéos —{' '}
+                    {rising} sons sont dans leur fenêtre de tir en {country}.
+                  </p>
+                )}
               </div>
               <div className="hero-actions">
                 <Link className="btn btn-primary btn-lg" href={`/idees${q}&niche=${encodeURIComponent(topVideo.niche)}`}>
@@ -174,7 +188,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             </div>
           </div>
           <div className="sound-grid">
-            {d.sounds.slice(0, 6).map((s, i) => (
+            {sounds.slice(0, 6).map((s, i) => (
               <SoundCard key={s.id} sound={s} delay={i * 60} />
             ))}
           </div>
@@ -209,12 +223,9 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
             </div>
           </div>
           <div className="tag-grid">
-            {[...d.hashtags]
-              .sort((a, b) => Number(inNiches(b.niche)) - Number(inNiches(a.niche)))
-              .slice(0, 8)
-              .map((t, i) => (
-                <TagCard key={t.id} tag={t} country={country} timeframe={timeframe} delay={i * 40} />
-              ))}
+            {hashtags.slice(0, 8).map((t, i) => (
+              <TagCard key={t.id} tag={t} country={country} timeframe={timeframe} delay={i * 40} />
+            ))}
           </div>
         </section>
 
@@ -305,7 +316,7 @@ export default async function TodayPage({ searchParams }: { searchParams: Search
           </div>
           <p style={{ marginTop: 12, fontSize: 11, color: 'var(--faint)', lineHeight: 1.5 }}>
             {realVideos.length
-              ? 'Les vidéos de vos niches sont de vraies vidéos TikTok (badge « Réel »). Les autres modules restent simulés.'
+              ? 'Vidéos, sons et hashtags de vos niches sont de vraies données TikTok des 7 derniers jours (badge « Réel »).'
               : "Tendances simulées pour la démo — le branchement aux données TikTok réelles est en cours. L'analyse de profil, elle, utilise déjà de vraies données."}
           </p>
         </div>

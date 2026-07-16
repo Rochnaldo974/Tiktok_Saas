@@ -11,7 +11,12 @@ export function SoundCard({ sound: s, delay = 0 }: { sound: Sound; delay?: numbe
     <article className="card sound-card reveal" style={{ animationDelay: `${delay}ms` }}>
       <div className="sound-top">
         <div className="artwork" style={artworkStyle(s.hue)}>
-          <Music />
+          {s.cover ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img src={s.cover} alt="" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+          ) : (
+            <Music />
+          )}
         </div>
         <div style={{ minWidth: 0 }}>
           <div className="sound-name">{s.name}</div>
@@ -20,9 +25,19 @@ export function SoundCard({ sound: s, delay = 0 }: { sound: Sound; delay?: numbe
         <div className="eq" aria-hidden="true"><i /><i /><i /><i /></div>
       </div>
       <div className="sound-meta">
-        <span className="up">+{s.growth} % de croissance</span>
-        <span>{fmt(s.videos)} vidéos</span>
-        {s.rising && <span className="chip hot" style={{ marginLeft: 'auto' }}>Fenêtre de tir</span>}
+        {s.real ? (
+          <>
+            <span className="up">{s.trendCount} tendance{(s.trendCount ?? 0) > 1 ? 's' : ''} cette semaine</span>
+            {s.videos > 0 && <span>{fmt(s.videos)} vidéos au total</span>}
+            <span className="chip cyan" style={{ marginLeft: 'auto' }}>Réel</span>
+          </>
+        ) : (
+          <>
+            <span className="up">+{s.growth} % de croissance</span>
+            <span>{fmt(s.videos)} vidéos</span>
+            {s.rising && <span className="chip hot" style={{ marginLeft: 'auto' }}>Fenêtre de tir</span>}
+          </>
+        )}
       </div>
       <p style={{ color: 'var(--muted)', fontSize: 13 }}>{s.note}</p>
       <div className="card-actions">

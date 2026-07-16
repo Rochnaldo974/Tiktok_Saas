@@ -280,6 +280,21 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       comparer les coûts EnsembleData vs Apify avant lancement ;
       candidater à l'API officielle TikTok en parallèle
 
+### 2026-07-16 — Sons et hashtags en vraies données + perfs provider
+- [x] **Sons réels** : extraits des mêmes appels que les vidéos (zéro coût
+      API en plus) — vrai nom/artiste/durée, **vraie pochette**, nombre
+      total de vidéos réel (`user_count`), « Utilisé dans N tendances de
+      vos niches cette semaine », badge Réel ; hero et plan du jour adaptés
+- [x] **Hashtags réels** : agrégés des posts tendance des niches suivies
+      (tags génériques filtrés), pondérés par vues, **lien direct vers la
+      page du tag TikTok**, badge Réel
+- [x] **Perfs provider** (l'API d'essai répond en 3-7 s) : timeout 20 s,
+      déduplication des appels concurrents, **échéance souple 8 s** — la
+      page ne bloque jamais, l'appel continue en arrière-plan et remplit
+      le cache (rendu suivant : 0,03 s mesuré, tout en réel)
+- [x] Vérifié en réel : sons (« Montagem Contigo Dale », 716 k vidéos,
+      pochettes) et hashtags (#dancetrend, #worldcup...) réels à l'écran
+
 ---
 
 ## 🔜 Immédiat
