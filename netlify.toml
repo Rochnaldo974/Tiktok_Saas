@@ -1,0 +1,18 @@
+# Déploiement Netlify — Next.js 16 (App Router, SSR).
+# Netlify détecte normalement Next.js tout seul quand le site est
+# connecté depuis Git ; ce fichier rend la config explicite pour que
+# le build ne dépende pas de la détection (sans lui : site servi en
+# statique → 404 sur toutes les routes).
+
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Next 16 exige Node ≥ 20 ; on fixe la version pour des builds stables.
+  NODE_VERSION = "22"
+
+# Runtime Next.js officiel de Netlify (SSR, ISR, routes API, proxy).
+# Version non épinglée, comme recommandé par Netlify.
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
