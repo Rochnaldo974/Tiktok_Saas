@@ -386,7 +386,12 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
       `src/components/copilot/chat.tsx` par une route serveur API Claude
       (même pattern que `/api/script`)
 - [ ] Tests E2E (Playwright) + CI GitHub Actions (build, lint, tests)
-- [ ] Déploiement (Vercel) + domaine — penser aux variables d'env Supabase
+- [ ] Déploiement **Netlify** (choix utilisateur, 2026-07-16) + domaine :
+      variables d'env posées (Supabase, Anthropic, EnsembleData),
+      `netlify.toml` committé (runtime Next.js explicite, publish `.next`,
+      Node 22) après un 404 « site statique » — reste : vérifier que le
+      site est bien connecté au repo GitHub (pas un drag & drop) et que
+      le premier build avec le runtime passe
 - [ ] Billing/abonnements (Stripe)
 - [ ] i18n : le français est la langue de base ; ajouter l'anglais ensuite
 
