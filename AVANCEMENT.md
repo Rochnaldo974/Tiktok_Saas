@@ -343,7 +343,7 @@ hashtags et créateurs sur lesquels agir aujourd'hui.
 
 - [x] `npm install` dans le dossier principal — fait le 2026-07-15, build
       vérifié dans le dossier principal
-- [ ] `git push origin main` (main local est en avance sur origin/main)
+- [x] `git push origin main` — fait le 2026-07-16 (`6b08f45..b9630fc`)
 - [x] Supprimer le worktree devenu inutile — fait le 2026-07-16 (verrou
       orphelin déverrouillé ; c'était lui qui polluait le lint avec
       435 fausses erreurs)
